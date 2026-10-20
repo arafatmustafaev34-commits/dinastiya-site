@@ -304,7 +304,7 @@ $('#orderForm').addEventListener('submit',async e=>{
   cart={};drawCart();openDrawer(false);showReceipt(num,p);if(API_URL)watchOrder(num,p);
 });
 /* ===== Уведомление «заказ готов» ===== */
-const BOT_USERNAME=''; // логин Telegram-бота без @, например 'dinastiya_orders_bot'
+const dinastiya_order_bot=''; // логин Telegram-бота без @, например 'dinastiya_orders_bot'
 let watch=null,cur=null;
 function setTg(n){
   const on=!!(API_URL&&BOT_USERNAME),a=$('#rTg');

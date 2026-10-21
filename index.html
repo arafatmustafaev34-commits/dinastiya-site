@@ -196,6 +196,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offs
     <ul id="rItems" class="mt-5 space-y-2 text-sm border-t border-b py-4" style="border-color:var(--line)"></ul>
     <div class="flex justify-between items-end mt-4"><span style="color:var(--muted)">Итого</span><span id="rTotal" class="serif text-2xl font-bold"></span></div>
     <div id="rStatus" class="mt-4 text-center text-sm font-bold py-2" style="color:var(--amber)">⏳ Готовится…</div>
+    <div class="text-center mt-3"><div id="rCode" class="serif text-3xl font-bold tracking-widest" style="color:var(--amber)"></div><div id="rClock" class="text-xs mt-1" style="color:var(--muted);font-variant-numeric:tabular-nums"></div></div>
     <a id="rTg" target="_blank" rel="noopener" class="btn btn-amber w-full mt-2 hidden"><i data-lucide="send" class="w-4 h-4"></i> Получить уведомление в Telegram</a>
     <p id="rTgHint" class="hidden text-xs text-center mt-2" style="color:var(--muted)">Нажмите «Старт» в Telegram, и бот напишет, когда заказ будет готов.</p>
     <p class="text-sm mt-4 text-center" style="color:var(--muted)">Покажите этот экран на кассе и оплатите заказ.</p>
@@ -280,6 +281,8 @@ function showReceipt(n,p){
   $('#rItems').innerHTML=p.items.map(i=>`<li class="flex justify-between gap-3"><span>${i.n} × ${i.q}</span><span class="whitespace-nowrap">${kzt(i.p*i.q)}</span></li>`).join('');
   $('#rTotal').textContent=kzt(p.total);
   $('#rChat').classList.toggle('hidden',!!API_URL);
+  $('#rCode').textContent=given?'⛔ ПОГАШЕН':(p.code||'');
+  given?stopClock():startClock();
   $('#rcpt').classList.replace('hidden','flex');
 }
 $('#rChat').onclick=()=>openChat(lastText);
@@ -297,7 +300,7 @@ $('#orderForm').addEventListener('submit',async e=>{
     const btn=$('#oBtn');btn.disabled=true;btn.textContent='Отправляем…';
     try{
       const j=await (await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)})).json();
-      if(!j.ok)throw new Error('fail');num=j.number;
+      if(!j.ok)throw new Error('fail');num=j.number;p.code=j.code;
     }catch(x){err.textContent='Не удалось отправить заказ. Попробуйте ещё раз или напишите нам в чат.';btn.disabled=false;btn.textContent='Оформить заказ';return}
     btn.disabled=false;btn.textContent='Оформить заказ';
   }else num='T'+String(Date.now()).slice(-4);
@@ -305,9 +308,17 @@ $('#orderForm').addEventListener('submit',async e=>{
 });
 /* ===== Уведомление «заказ готов» ===== */
 const BOT_USERNAME='dinastiya_order_bot'; // логин Telegram-бота без @, например 'dinastiya_orders_bot'
-let watch=null,cur=null;
+let watch=null,cur=null,given=false,clockT=null;
+function startClock(){clearInterval(clockT);const el=$('#rClock'),t=()=>el.textContent='🟢 LIVE '+new Date().toLocaleTimeString('ru-RU');t();clockT=setInterval(t,250)}
+function stopClock(){clearInterval(clockT);$('#rClock').textContent=''}
+function onGiven(n){
+  given=true;stopClock();
+  const st=$('#rStatus');st.textContent='⛔ Этот чек уже погашен';st.style.color='#ff6b6b';
+  $('#rCode').textContent='⛔ ПОГАШЕН';$('#rTg').classList.add('hidden');$('#rTgHint').classList.add('hidden');
+  const p=$('#pill');p.classList.remove('hidden');p.textContent='⛔ Чек №'+n+' погашен';p.style.borderColor='#ff6b6b';
+}
 function setTg(n){
-  const on=!!(API_URL&&BOT_USERNAME),a=$('#rTg');
+  const on=!!(API_URL&&BOT_USERNAME)&&!given,a=$('#rTg');
   a.classList.toggle('hidden',!on);$('#rTgHint').classList.toggle('hidden',!on);$('#rStatus').classList.toggle('hidden',!API_URL);
   if(on)a.href='https://t.me/'+BOT_USERNAME+'?start='+n;
 }
@@ -317,14 +328,17 @@ function onReady(n){
   setPill(n,true);const st=$('#rStatus');st.textContent='✅ Заказ готов! Заберите на кассе';st.style.color='#7bd88f';
   try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}
   beep();toast('Заказ №'+n+' готов! Заберите на кассе');
-  try{localStorage.removeItem('dc-order')}catch(e){}
 }
 function watchOrder(n,p){
-  cur={n,p};clearInterval(watch);
+  cur={n,p};given=false;clearInterval(watch);let ready=false;
   const st=$('#rStatus');st.textContent='⏳ Готовится…';st.style.color='var(--amber)';
   try{localStorage.setItem('dc-order',JSON.stringify({n,p,t:Date.now()}))}catch(e){}
   setPill(n,false);
-  const tick=async()=>{try{const j=await (await fetch(API_URL+'?n='+n)).json();if(j.ok&&j.status==='готов'){clearInterval(watch);onReady(n)}}catch(e){}};
+  const tick=async()=>{try{const j=await (await fetch(API_URL+'?n='+n)).json();
+    if(!j.ok)return;
+    if(j.status==='выдан'){clearInterval(watch);onGiven(n)}
+    else if(j.status==='готов'&&!ready){ready=true;onReady(n)}
+  }catch(e){}};
   watch=setInterval(tick,8000);tick();
 }
 $('#pill').onclick=()=>{if(cur)showReceipt(cur.n,cur.p)};

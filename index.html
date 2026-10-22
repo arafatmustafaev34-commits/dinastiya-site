@@ -213,7 +213,7 @@ span.sz{cursor:default}
   <form id="orderForm" class="p-5 border-t space-y-3" style="border-color:var(--line)" novalidate>
     <input id="oName" class="inp" placeholder="Ваше имя" autocomplete="name" maxlength="40">
     <input id="oPhone" class="inp" placeholder="Телефон" inputmode="tel" autocomplete="tel" maxlength="20">
-    <select id="oWhen" class="inp"><option>Заберу как можно скорее</option><option>Заберу через 15 минут</option><option>Заберу через 30 минут</option><option>Заберу через 1 час</option></select>
+    <select id="oWhen" class="inp" aria-label="Когда заберёте"><optgroup label="Заберу с собой"><option>С собой: как можно скорее</option><option>С собой: через 15 минут</option><option>С собой: через 30 минут</option><option>С собой: через 1 час</option></optgroup><optgroup label="Я уже в кофейне"><option>В кофейне: заберу на кассе</option></optgroup></select>
     <input id="oNote" class="inp" placeholder="Комментарий к заказу (необязательно)" maxlength="150">
     <div class="flex justify-between items-end pt-1"><span style="color:var(--muted)">Итого</span><span id="cartTotal" class="serif text-2xl font-bold" style="color:var(--amber)">0 ₸</span></div>
     <button id="oBtn" class="btn btn-amber w-full" type="submit">Оформить заказ</button>

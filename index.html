@@ -66,6 +66,8 @@ span.sz{cursor:default}
 .madd{padding:.55rem 1.2rem;border-radius:999px;font-weight:700;font-size:.88rem;color:var(--amber);border:1px solid var(--amber2);transition:.25s;cursor:pointer}
 .madd:hover{background:var(--amber);color:#1c1008}
 .madd:active{transform:scale(.96)}
+.st{font-size:2.3rem;line-height:1;color:#5a4636;transition:color .15s,transform .15s;cursor:pointer;padding:0 .1rem}
+.st.on{color:var(--amber)}.st:active{transform:scale(.9)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -129,6 +131,7 @@ span.sz{cursor:default}
   <h2 class="serif text-3xl md:text-4xl font-bold">Что предлагает наше кафе</h2>
   <p class="mt-3" style="color:var(--muted)">Добавляйте позиции кнопкой «+» и оформляйте заказ с телефона. Оплата на кассе.</p>
   <div id="promo" class="mt-8"></div>
+  <div id="again" class="hidden mt-6"></div>
   <div id="catNav" class="sticky z-40 mt-8 glass border rounded-2xl p-2 flex gap-2 overflow-x-auto" style="top:calc(env(safe-area-inset-top,0px) + 72px);border-color:var(--line)"></div>
   <div id="menuGrid"></div>
 </section>
@@ -191,6 +194,17 @@ span.sz{cursor:default}
 </footer>
 <a href="#" data-book class="md:hidden fixed right-4 z-40 btn btn-amber !rounded-full !p-0 w-14 h-14 shadow-2xl" style="bottom:calc(env(safe-area-inset-bottom,0px) + 16px)" aria-label="Написать в чат"><i data-lucide="message-circle" class="w-6 h-6"></i></a>
 
+<div id="fb" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center p-4" style="background:rgba(8,5,3,.62);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)">
+  <div class="card w-full max-w-sm p-6 text-center" style="padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))" role="dialog" aria-label="Оценка заказа">
+    <h3 class="serif font-bold text-2xl">Как вам кофе?</h3>
+    <p class="text-sm mt-1" id="fbSub" style="color:var(--muted)"></p>
+    <div id="stars" class="flex justify-center gap-1 mt-5"><button class="st" data-r="1" aria-label="1">★</button><button class="st" data-r="2" aria-label="2">★</button><button class="st" data-r="3" aria-label="3">★</button><button class="st" data-r="4" aria-label="4">★</button><button class="st" data-r="5" aria-label="5">★</button></div>
+    <div id="fbLow" class="hidden mt-4"><textarea id="fbText" rows="3" maxlength="300" class="inp" placeholder="Что пошло не так? Мы обязательно разберёмся"></textarea><button id="fbSend" class="btn btn-amber w-full mt-3">Отправить</button></div>
+    <div id="fbHigh" class="hidden mt-4"><p class="text-sm" style="color:var(--muted)">Спасибо! Нам будет очень приятно, если вы расскажете о нас в 2ГИС.</p><a href="https://2gis.kz/almaty/geo/70000001110902166" target="_blank" rel="noopener" class="btn btn-amber w-full mt-3"><span class="gis">2ГИС</span> Оставить отзыв</a></div>
+    <div id="fbThanks" class="hidden mt-4 text-sm" style="color:var(--muted)">Спасибо за честную оценку. Мы свяжемся, если понадобятся детали.</div>
+    <button id="fbClose" class="mt-4 text-sm underline underline-offset-4" style="color:var(--muted)">Не сейчас</button>
+  </div>
+</div>
 <div id="lb" class="fixed inset-0 z-[95] hidden items-center justify-center bg-black/90 p-4 cursor-zoom-out"><button class="absolute top-4 right-4 w-11 h-11 rounded-full grid place-items-center border btn-ghost glass" aria-label="Закрыть" style="margin-top:env(safe-area-inset-top,0px)"><i data-lucide="x" class="w-5 h-5"></i></button><img id="lbImg" alt="" class="max-h-[85vh] max-w-full rounded-2xl"></div>
 <div id="shade" class="fixed inset-0 z-[70] bg-black/60 hidden"></div>
 <aside id="drawer" class="fixed top-0 right-0 bottom-0 z-[80] w-full max-w-md translate-x-full flex flex-col border-l transition-transform duration-300" style="background:var(--surface);border-color:var(--line);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)" aria-label="Ваш заказ">
@@ -245,7 +259,7 @@ const $=s=>document.querySelector(s);
 const kz=n=>n.toLocaleString('ru-RU')+' ₸';
 const MENU=[
  {id:'coffee',t:'Кофе',i:'coffee',r:[
-  {n:'Эспрессо',d:'Крепкий и насыщенный, с плотной кремой.',s:[['360 мл',590]]},
+  {n:'Эспрессо',d:'Крепкий и насыщенный, с плотной кремой.',s:[['36 мл',590]]},
   {n:'Американо',d:'Мягкий чёрный кофе на основе эспрессо.',s:[['250 мл',790],['350 мл',890]]},
   {n:'Капучино',d:'Эспрессо, молоко и воздушная пенка.',s:[['250 мл',990],['350 мл',1090]]},
   {n:'Флэт уайт',d:'Двойной эспрессо с бархатным молоком.',s:[['250 мл',1090]]},
@@ -367,7 +381,8 @@ $('#orderForm').addEventListener('submit',async e=>{
     }catch(x){err.textContent='Не удалось отправить заказ. Попробуйте ещё раз или напишите нам в чат.';btn.disabled=false;btn.textContent='Оформить заказ';return}
     btn.disabled=false;btn.textContent='Оформить заказ';
   }else num='T'+String(Date.now()).slice(-4);
-  cart={};drawCart();openDrawer(false);showReceipt(num,p);if(API_URL)watchOrder(num,p);
+  try{localStorage.setItem('dc-last',JSON.stringify(items.map(i=>({n:i.n,q:i.q}))))}catch(e){}
+  cart={};drawCart();openDrawer(false);showReceipt(num,p);if(API_URL)watchOrder(num,p);renderAgain();
 });
 /* ===== Уведомление «заказ готов» ===== */
 const BOT_USERNAME='dinastiya_order_bot'; // логин Telegram-бота без @, например 'dinastiya_orders_bot'
@@ -375,7 +390,7 @@ let watch=null,cur=null,given=false,clockT=null;
 function startClock(){clearInterval(clockT);const el=$('#rClock'),t=()=>el.textContent='🟢 LIVE '+new Date().toLocaleTimeString('ru-RU');t();clockT=setInterval(t,250)}
 function stopClock(){clearInterval(clockT);$('#rClock').textContent=''}
 function onGiven(n){
-  given=true;stopClock();
+  given=true;stopClock();setTimeout(()=>askFeedback(n),1500);
   const st=$('#rStatus');st.textContent='⛔ Этот чек уже погашен';st.style.color='#ff6b6b';
   $('#rCode').textContent='⛔ ПОГАШЕН';$('#rTg').classList.add('hidden');$('#rTgHint').classList.add('hidden');
   const p=$('#pill');p.classList.remove('hidden');p.textContent='⛔ Чек №'+n+' погашен';p.style.borderColor='#ff6b6b';
@@ -406,6 +421,38 @@ function watchOrder(n,p){
 }
 $('#pill').onclick=()=>{if(cur)showReceipt(cur.n,cur.p)};
 (function(){if(!API_URL)return;try{const o=JSON.parse(localStorage.getItem('dc-order')||'null');if(o&&Date.now()-o.t<432e5)watchOrder(o.n,o.p)}catch(e){}})();
+
+/* ===== Повторить прошлый заказ ===== */
+const PRICE={};MENU.forEach(c=>c.r.forEach(x=>x.s.forEach(z=>{PRICE[x.n+(z[0]?' ('+z[0]+')':'')]=z[1]})));
+function lastOrder(){try{return (JSON.parse(localStorage.getItem('dc-last')||'null')||[]).filter(i=>PRICE[i.n]!==undefined)}catch(e){return[]}}
+function renderAgain(){
+  const a=$('#again'),l=lastOrder();
+  if(!l.length){a.classList.add('hidden');return}
+  const sum=l.reduce((s,i)=>s+PRICE[i.n]*i.q,0);
+  a.innerHTML=`<div class="glass border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3" style="border-color:var(--line)"><div class="min-w-0"><div class="text-xs" style="color:var(--muted)">Ваш прошлый заказ</div><div class="font-semibold">${l.map(i=>i.n+(i.q>1?' × '+i.q:'')).join(', ')}</div></div><button id="againBtn" class="btn btn-amber !py-2.5 text-sm">Повторить · ${kz(sum)}</button></div>`;
+  a.classList.remove('hidden');
+  $('#againBtn').onclick=()=>{lastOrder().forEach(i=>{cart[i.n]=cart[i.n]||{n:i.n,p:PRICE[i.n],q:0};cart[i.n].q+=i.q});drawCart();openDrawer(true);toast('Прошлый заказ добавлен в корзину')};
+}
+renderAgain();
+
+/* ===== Оценка после выдачи ===== */
+let fbN=null,fbR=0;
+const fbKey=n=>'dc-fb-'+n,fbDone=n=>{try{return !!localStorage.getItem(fbKey(n))}catch(e){return false}},fbMark=(n,v)=>{try{localStorage.setItem(fbKey(n),String(v))}catch(e){}};
+function fbSend(n,r,c){fbMark(n,r);fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type:'feedback',number:n,rating:r,comment:c})}).catch(()=>{})}
+function fbShow(on){$('#fb').classList.toggle('hidden',!on);$('#fb').classList.toggle('flex',on)}
+function askFeedback(n){
+  if(!API_URL||fbDone(n)||String(n).charAt(0)==='T')return;
+  fbN=n;fbR=0;$('#fbSub').textContent='Заказ №'+n+'. Оцените, это займёт секунду.';
+  document.querySelectorAll('.st').forEach(s=>s.classList.remove('on'));
+  ['fbLow','fbHigh','fbThanks'].forEach(i=>$('#'+i).classList.add('hidden'));$('#stars').classList.remove('hidden');$('#fbClose').classList.remove('hidden');
+  fbShow(true);
+}
+$('#stars').addEventListener('click',e=>{const b=e.target.closest('.st');if(!b)return;fbR=+b.dataset.r;
+  document.querySelectorAll('.st').forEach(s=>s.classList.toggle('on',+s.dataset.r<=fbR));
+  if(fbR>=4){fbSend(fbN,fbR,'');$('#fbLow').classList.add('hidden');$('#fbHigh').classList.remove('hidden');$('#stars').classList.add('hidden');$('#fbClose').textContent='Закрыть'}
+  else{$('#fbHigh').classList.add('hidden');$('#fbLow').classList.remove('hidden')}});
+$('#fbSend').onclick=()=>{fbSend(fbN,fbR,$('#fbText').value.trim());$('#fbLow').classList.add('hidden');$('#stars').classList.add('hidden');$('#fbThanks').classList.remove('hidden');$('#fbClose').textContent='Закрыть'};
+$('#fbClose').onclick=()=>{if(fbN&&!fbDone(fbN)&&fbR===0)fbMark(fbN,'skip');fbShow(false);$('#fbClose').textContent='Не сейчас'};
 /* появление карточек, активная категория, подсказка по времени суток */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
 document.querySelectorAll('.mc').forEach(c=>io.observe(c));

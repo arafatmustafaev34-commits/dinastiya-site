@@ -69,6 +69,10 @@ span.sz{cursor:default}
 .madd:active{transform:scale(.96)}
 .st{font-size:2.3rem;line-height:1;color:#5a4636;transition:color .15s,transform .15s;cursor:pointer;padding:0 .1rem}
 .st.on{color:var(--amber)}.st:active{transform:scale(.9)}
+.mc.in.off{opacity:.55}.mc.off:hover{border-color:var(--line)}
+.moff{font-size:.8rem;color:var(--muted);border:1px dashed var(--line);padding:.4rem .9rem;border-radius:999px;white-space:nowrap}
+.wdot{width:9px;height:9px;border-radius:50%;background:#7fd18b;flex:none;animation:wblink 1.4s infinite}
+@keyframes wblink{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -131,6 +135,7 @@ span.sz{cursor:default}
 <section id="menu" class="py-14 max-w-6xl mx-auto px-5"><div id="menuBg" aria-hidden="true" style="position:absolute;top:0;left:0;right:0;height:660px;z-index:-1;pointer-events:none;background-size:cover;background-position:center;filter:blur(20px) saturate(1.15);opacity:.3;-webkit-mask-image:radial-gradient(ellipse 72% 85% at 50% 22%,#000 30%,transparent 76%);mask-image:radial-gradient(ellipse 72% 85% at 50% 22%,#000 30%,transparent 76%)"></div>
   <h2 class="serif text-3xl md:text-4xl font-bold">Что предлагает наше кафе</h2>
   <p class="mt-3" style="color:var(--muted)">Добавляйте позиции кнопкой «+» и оформляйте заказ с телефона. Оплата на кассе.</p>
+  <div id="wait" class="hidden mt-5 inline-flex items-center gap-3 px-4 py-2 rounded-full glass border text-sm" style="border-color:var(--line)"><span class="wdot"></span><span id="waitTxt"></span></div>
   <div id="promo" class="mt-8"></div>
   <div id="again" class="hidden mt-6"></div>
   <div id="catNav" class="sticky z-40 mt-8 glass border rounded-2xl p-2 flex gap-2 overflow-x-auto" style="top:calc(env(safe-area-inset-top,0px) + 72px);border-color:var(--line)"></div>
@@ -258,7 +263,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-book]');if
    В «Хит недели» попадает позиция с hit:true или та, что указана в PROMO_FIXED */
 const $=s=>document.querySelector(s);
 const kz=n=>n.toLocaleString('ru-RU')+' ₸';
-const MENU=[
+let MENU=[
  {id:'coffee',t:'Кофе',i:'coffee',r:[
   {n:'Эспрессо',d:'Крепкий и насыщенный, с плотной кремой.',s:[['36 мл',590]]},
   {n:'Американо',d:'Мягкий чёрный кофе на основе эспрессо.',s:[['250 мл',790],['350 мл',890]]},
@@ -301,16 +306,42 @@ const MENU=[
   {n:'Фруктовый микс',d:'Гибискус, шиповник, яблоко, ананас, папайя, ягоды клюквы.',s:[['350 мл',790],['800 мл',1490]]},
   {n:'Сокровище Японии',d:'Бутоны жасмина, цветы мальвы, лепестки подсолнечника, клубника, красная смородина.',s:[['350 мл',790],['800 мл',1490]]}]}
 ];
+/* ===== Меню из Google-таблицы. Встроенное меню выше работает как запасное, если сервер недоступен ===== */
+const ICONS=[[/айс|холод/i,'snowflake'],[/лимонад|напитк/i,'citrus'],[/коктейл|шейк|смузи/i,'milk'],[/чай/i,'leaf'],[/выпеч|круассан|десерт|торт/i,'croissant']];
+let menuSig='',menuReady=false;
+function menuFromRows(rows){
+  const cats=[],map={},used={};
+  rows.forEach(r=>{
+    const cat=r[0],name=r[1];if(!cat||!name)return;
+    let c=map[cat];
+    if(!c){let id=/айс|холод/i.test(cat)?'ice':/чай/i.test(cat)?'tea':/кофе/i.test(cat)?'coffee':'m'+cats.length;if(used[id])id='m'+cats.length;used[id]=1;
+      c={id,t:cat,i:(ICONS.find(x=>x[0].test(cat))||[0,'coffee'])[1],note:r[7]||'',r:[],by:{}};map[cat]=c;cats.push(c)}
+    let it=c.by[name];
+    if(!it){it={n:name,d:r[2]||'',all:[],hit:false};c.by[name]=it;c.r.push(it)}
+    if(!it.d&&r[2])it.d=r[2];if(!c.note&&r[7])c.note=r[7];
+    it.all.push([r[3]||'',Number(r[4]),r[5]!==false]);if(r[6])it.hit=true;
+  });
+  cats.forEach(c=>{c.r.forEach(it=>{const on=it.all.filter(z=>z[2]);it.off=!on.length;it.s=(on.length?on:it.all).map(z=>[z[0],z[1]]);delete it.all});delete c.by});
+  return cats;
+}
+try{const c=JSON.parse(localStorage.getItem('dc-menu')||'null');if(c&&c.length){MENU=menuFromRows(c);menuSig=JSON.stringify(c)}}catch(e){}
 const sizesHtml=x=>x.s.length>1?`<div class="flex flex-wrap gap-2 mt-4">${x.s.map((z,k)=>`<button data-sz="${k}" class="sz${k?'':' on'}">${z[0]}</button>`).join('')}</div>`:(x.s[0][0]?`<div class="mt-4"><span class="sz on">${x.s[0][0]}</span></div>`:'');
+function renderMenu(){
 $('#catNav').innerHTML=MENU.map(c=>`<a href="#c-${c.id}" data-cat="${c.id}" class="cp">${c.t}</a>`).join('');
-$('#menuGrid').innerHTML=MENU.map((c,ci)=>`<div id="c-${c.id}" class="mcat"><div class="flex items-center gap-3"><span class="w-11 h-11 rounded-full grid place-items-center" style="background:rgba(216,154,91,.14)"><i data-lucide="${c.i}" class="w-5 h-5" style="color:var(--amber)"></i></span><h3 class="serif font-bold text-3xl">${c.t}</h3></div>${c.note?`<p class="text-sm mt-2" style="color:var(--muted)">${c.note}</p>`:''}<div class="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${c.r.map((x,ii)=>`<article class="mc" data-sel="0" data-ci="${ci}" data-ii="${ii}" style="transition-delay:${(ii%3)*90}ms">${x.hit?'<span class="mhit">Хит</span>':''}<h4 class="serif font-bold text-xl leading-tight${x.hit?' pr-14':''}">${x.n}</h4>${x.d?`<p class="text-sm mt-2 flex-1" style="color:var(--muted)">${x.d}</p>`:'<div class="flex-1"></div>'}${sizesHtml(x)}<div class="mt-4 flex items-center justify-between gap-3"><span class="mp serif text-2xl font-bold" style="color:var(--amber)">${kz(x.s[0][1])}</span><button data-add="${ci}-${ii}" class="madd">Добавить</button></div></article>`).join('')}</div></div>`).join('');
+$('#menuGrid').innerHTML=MENU.map((c,ci)=>`<div id="c-${c.id}" class="mcat"><div class="flex items-center gap-3"><span class="w-11 h-11 rounded-full grid place-items-center" style="background:rgba(216,154,91,.14)"><i data-lucide="${c.i}" class="w-5 h-5" style="color:var(--amber)"></i></span><h3 class="serif font-bold text-3xl">${c.t}</h3></div>${c.note?`<p class="text-sm mt-2" style="color:var(--muted)">${c.note}</p>`:''}<div class="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${c.r.map((x,ii)=>`<article class="mc${x.off?' off':''}" data-sel="0" data-ci="${ci}" data-ii="${ii}" style="transition-delay:${(ii%3)*90}ms">${x.hit?'<span class="mhit">Хит</span>':''}<h4 class="serif font-bold text-xl leading-tight${x.hit?' pr-14':''}">${x.n}</h4>${x.d?`<p class="text-sm mt-2 flex-1" style="color:var(--muted)">${x.d}</p>`:'<div class="flex-1"></div>'}${sizesHtml(x)}<div class="mt-4 flex items-center justify-between gap-3"><span class="mp serif text-2xl font-bold" style="color:var(--amber)">${kz(x.s[0][1])}</span>${x.off?'<span class="moff">Нет в наличии</span>':`<button data-add="${ci}-${ii}" class="madd">Добавить</button>`}</div></article>`).join('')}</div></div>`).join('');
+}
+renderMenu();
 document.addEventListener('click',e=>{const b=e.target.closest('[data-sz]');if(!b)return;const c=b.closest('.mc'),it=MENU[c.dataset.ci].r[c.dataset.ii];c.dataset.sel=b.dataset.sz;c.querySelectorAll('.sz').forEach(x=>x.classList.toggle('on',x===b));c.querySelector('.mp').textContent=kz(it.s[b.dataset.sz][1])});
 $('#gal').innerHTML=GALLERY.map((g,i)=>`<button data-g="${i}" class="snap-center shrink-0 w-[62vw] max-w-[250px] lg:w-auto lg:max-w-none text-left group" aria-label="${g[1]}"><div class="aspect-[3/4] rounded-[26px] border overflow-hidden transition duration-300 group-hover:-translate-y-1" style="border-color:var(--line);background:url('${IMG[g[0]]}') center/cover"></div><div class="mt-3 text-sm" style="color:var(--muted)">${g[1]}</div></button>`).join('');
 document.addEventListener('click',e=>{const g=e.target.closest('[data-g]');if(g){$('#lbImg').src=IMG[GALLERY[g.dataset.g][0]];$('#lb').classList.replace('hidden','flex');return}if(e.target.closest('#lb')){$('#lb').classList.replace('flex','hidden')}});
 const PROMO_FIXED='Айс урбеч миндальный'; // название напитка для блока «Хит недели»
-const sweets=[];MENU.forEach((c,ci)=>c.r.forEach((x,ii)=>{if(x.hit||x.n===PROMO_FIXED)sweets.push([ci,ii,x])}));
+function renderPromo(){
+const sweets=[];MENU.forEach((c,ci)=>c.r.forEach((x,ii)=>{if(!x.off&&(x.hit||x.n===PROMO_FIXED))sweets.push([ci,ii,x])}));
 const pk=sweets.find(z=>z[2].n===PROMO_FIXED)||sweets[Math.floor(Math.random()*sweets.length)];
+if(!pk){$('#promo').innerHTML='';return}
 $('#promo').innerHTML=`<div class="card relative overflow-hidden hover:!transform-none" style="background:linear-gradient(90deg,rgba(18,13,10,.94) 30%,rgba(18,13,10,.55)),url('${IMG.cups}') center/cover"><div class="p-7 md:p-10 max-w-lg"><span class="inline-flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full" style="background:rgba(216,154,91,.2);color:var(--amber)"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Хит недели</span><h3 class="serif text-3xl font-bold mt-4">${pk[2].n}</h3><p class="mt-2" style="color:var(--muted)">Напиток, который гости заказывают чаще всего. Попробуйте и вы.</p><div class="mt-5 flex items-center gap-4"><span class="serif text-2xl font-bold" style="color:var(--amber)">${kz(pk[2].s[0][1])}</span><button data-add="${pk[0]}-${pk[1]}" class="btn btn-amber !py-2.5 text-sm">Добавить в заказ</button></div></div></div>`;
+}
+renderPromo();
 $('#menuBg').style.backgroundImage='url("'+IMG.latte+'")';
 document.querySelectorAll('[data-photo]').forEach(e=>{const u=PHOTOS[e.dataset.photo];if(u){e.style.backgroundImage='url("'+u+'")';e.classList.add('img')}});
 
@@ -379,7 +410,12 @@ $('#orderForm').addEventListener('submit',async e=>{
     const btn=$('#oBtn');btn.disabled=true;btn.textContent='Отправляем…';
     try{
       const j=await (await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)})).json();
-      if(!j.ok)throw new Error('fail');num=j.number;p.code=j.code;
+      if(!j.ok){
+        if(j.error==='stop'||j.error==='menu'){
+          err.textContent=j.error==='stop'?('Закончилось: '+(j.items||[]).join(', ')+'. Уберите из заказа и попробуйте снова'):'Меню обновилось. Проверьте корзину и повторите';
+          btn.disabled=false;btn.textContent='Оформить заказ';menuSig='';loadMenu();return}
+        throw new Error('fail')}
+      num=j.number;p.code=j.code;if(typeof j.total==='number')p.total=j.total;
     }catch(x){err.textContent='Не удалось отправить заказ. Попробуйте ещё раз или напишите нам в чат.';btn.disabled=false;btn.textContent='Оформить заказ';return}
     btn.disabled=false;btn.textContent='Оформить заказ';
   }else num='T'+String(Date.now()).slice(-4);
@@ -425,8 +461,8 @@ $('#pill').onclick=()=>{if(cur)showReceipt(cur.n,cur.p)};
 (function(){if(!API_URL)return;try{const o=JSON.parse(localStorage.getItem('dc-order')||'null');if(o&&Date.now()-o.t<432e5)watchOrder(o.n,o.p)}catch(e){}})();
 
 /* ===== Повторить прошлый заказ ===== */
-const PRICE={};MENU.forEach(c=>c.r.forEach(x=>x.s.forEach(z=>{PRICE[x.n+(z[0]?' ('+z[0]+')':'')]=z[1]})));
-function lastOrder(){try{return (JSON.parse(localStorage.getItem('dc-last')||'null')||[]).filter(i=>PRICE[i.n]!==undefined)}catch(e){return[]}}
+let PRICE={},OFF={};function rebuildPrice(){PRICE={};OFF={};MENU.forEach(c=>c.r.forEach(x=>x.s.forEach(z=>{const k=x.n+(z[0]?' ('+z[0]+')':'');PRICE[k]=z[1];if(x.off)OFF[k]=true})))}rebuildPrice();
+function lastOrder(){try{return (JSON.parse(localStorage.getItem('dc-last')||'null')||[]).filter(i=>PRICE[i.n]!==undefined&&!OFF[i.n])}catch(e){return[]}}
 function renderAgain(){
   const a=$('#again'),l=lastOrder();
   if(!l.length){a.classList.add('hidden');return}
@@ -458,15 +494,51 @@ $('#fbClose').onclick=()=>{if(fbN&&!fbDone(fbN)&&fbR===0)fbMark(fbN,'skip');fbSh
 /* появление карточек, активная категория, подсказка по времени суток */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
 document.querySelectorAll('.mc').forEach(c=>io.observe(c));
-const cps=[...document.querySelectorAll('.cp')];
+let cps=[...document.querySelectorAll('.cp')];
 const spy=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const id=e.target.id.slice(2);cps.forEach(p=>p.classList.toggle('on',p.dataset.cat===id));const on=cps.find(p=>p.classList.contains('on'));if(on){const n=$('#catNav');n.scrollTo({left:on.offsetLeft-n.clientWidth/2+on.clientWidth/2,behavior:'smooth'})}}}),{rootMargin:'-25% 0px -65% 0px'});
 document.querySelectorAll('.mcat').forEach(s=>spy.observe(s));
-(function(){const hr=new Date().getHours();let t,id='coffee';
+menuReady=true;
+function setHint(){const hr=new Date().getHours();let t,id='coffee';
   if(hr>=5&&hr<11)t='Доброе утро. Начнём с капучино?';
   else if(hr>=11&&hr<17){t='В жаркий день хорош айс-латте.';id='ice'}
   else if(hr>=17&&hr<23){t='К вечеру подойдёт чай.';id='tea'}
   else t='Заходите в любое время.';
-  const a=$('#now');a.textContent=t;a.href='#c-'+id})();
+  const a=$('#now'),el=document.getElementById('c-'+id)||document.querySelector('.mcat');a.textContent=t;a.href='#'+(el?el.id:'menu')}
+setHint();
+/* ===== Меню и время ожидания с сервера ===== */
+const plz=n=>n%10===1&&n%100!==11?'заказ':(n%10>1&&n%10<5&&(n%100<10||n%100>20))?'заказа':'заказов';
+function showWait(j){
+  if(typeof j.queue!=='number')return;
+  $('#waitTxt').textContent=j.queue===0?'Сейчас без очереди. Приготовим примерно за '+j.wait+' мин':'Сейчас готовим '+j.queue+' '+plz(j.queue)+'. Ожидание около '+j.wait+' мин';
+  $('#wait').classList.remove('hidden');
+}
+function hookMenu(){
+  if(!menuReady)return;
+  document.querySelectorAll('.mc').forEach(c=>c.classList.add('in'));
+  cps=[...document.querySelectorAll('.cp')];spy.disconnect();document.querySelectorAll('.mcat').forEach(s=>spy.observe(s));
+  try{lucide.createIcons()}catch(e){}
+}
+function applyMenu(){
+  rebuildPrice();
+  const gone=[];
+  Object.keys(cart).forEach(k=>{if(PRICE[k]===undefined||OFF[k]){gone.push(cart[k].n);delete cart[k]}else cart[k].p=PRICE[k]});
+  renderMenu();renderPromo();renderAgain();drawCart();setHint();hookMenu();
+  if(gone.length)toast('Нет в наличии: '+gone.join(', '));
+}
+async function loadMenu(){
+  if(!API_URL)return;
+  try{
+    const j=await (await fetch(API_URL+'?menu=1')).json();
+    if(!j||!j.ok)return;
+    showWait(j);
+    if(j.rows&&j.rows.length){
+      const sig=JSON.stringify(j.rows);
+      if(sig!==menuSig){menuSig=sig;MENU=menuFromRows(j.rows);try{localStorage.setItem('dc-menu',sig)}catch(e){}applyMenu()}
+    }
+  }catch(e){}
+}
+loadMenu();setInterval(()=>{if(!document.hidden)loadMenu()},90000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadMenu()});
 drawCart();
 try{lucide.createIcons()}catch(e){}
 </script>

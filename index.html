@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
-<meta name="theme-color" content="#120d0a">
+<meta name="theme-color" content="#0d0907">
 <meta name="description" content="Династия Coffee — кофейня в Шамалгане. Кофе, лимонады, коктейли и чаи. Ежедневно с 8:00 до 22:00. Бронь столика и заказ онлайн.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ru_RU">
@@ -74,6 +74,97 @@ span.sz{cursor:default}
 .wdot{width:9px;height:9px;border-radius:50%;background:#7fd18b;flex:none;animation:wblink 1.4s infinite}
 @keyframes wblink{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+<style id="apple-layer">
+/* =====================================================================
+   APPLE-LAYER — дизайн в стиле Apple, накладывается поверх основного CSS.
+   Фото (.ph, [data-photo], галерея) и цены не перемещаются и не обрезаются:
+   слой меняет только оформление вокруг них. Чтобы вернуть старый вид,
+   просто удалите два блока: стили с id «apple-layer» (в конце head) и скрипт с id «apple-layer-js» (в конце body).
+   ===================================================================== */
+
+/* ---------- 1. ПАЛИТРА, ШРИФТ, «ПРУЖИНА» ---------- */
+:root{
+  --bg:#0d0907; --surface:#17100d; --card:#1b1410;
+  --line:rgba(255,244,230,.09); --text:#f6f0e7; --muted:#ab9c8d;      /* контраст текста к фону ≥ 7:1 */
+  /* Тайминг «как у Apple»: быстрый старт и очень долгое мягкое торможение (spring ease-out). Им анимируется всё */
+  --spring:cubic-bezier(.16,1,.3,1);
+  --sf:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Manrope','Segoe UI',system-ui,sans-serif;
+  /* Многослойная тень: 6 слоёв от резкого к мягкому = ощущение глубины и физического объёма */
+  --shadow-rest:0 0 0 .5px rgba(255,244,230,.04),0 1px 1px rgba(0,0,0,.16),0 2px 2px rgba(0,0,0,.14),0 4px 4px rgba(0,0,0,.12),0 8px 8px rgba(0,0,0,.10),0 16px 24px -4px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,244,230,.07);
+  --shadow-hover:0 0 0 .5px rgba(255,244,230,.06),0 2px 2px rgba(0,0,0,.18),0 4px 4px rgba(0,0,0,.16),0 8px 8px rgba(0,0,0,.14),0 16px 16px rgba(0,0,0,.12),0 32px 48px -8px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,244,230,.10);
+}
+body{font-family:var(--sf);letter-spacing:-.011em;
+  background:radial-gradient(1100px 560px at 50% -8%,rgba(216,154,91,.11),transparent 62%) no-repeat,var(--bg)}
+.serif{font-family:var(--sf);letter-spacing:-.022em}                                   /* заголовки теперь без засечек, как на apple.com */
+nav .serif{font-family:'Playfair Display',Georgia,serif;letter-spacing:0}               /* имя кофейни в шапке остаётся с засечками */
+main .serif.italic{font-style:normal;font-weight:600;letter-spacing:-.01em}
+
+/* ---------- 2. ТИПОГРАФИКА: крупно, плотно, контрастно ---------- */
+main h1[class]{font-size:clamp(2.5rem,7.2vw,4.75rem);line-height:1.04;font-weight:700;letter-spacing:-.04em;
+  background:linear-gradient(180deg,#fff 0%,#ecdcc4 55%,#d19c63 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+main h2[class]{font-size:clamp(2rem,4.8vw,3.4rem);line-height:1.06;font-weight:700;letter-spacing:-.035em}
+main h3[class]{letter-spacing:-.02em}
+main>section:not(:first-child){padding-top:clamp(3.2rem,7.5vw,6rem);padding-bottom:clamp(3.2rem,7.5vw,6rem)}   /* больше «воздуха» между блоками */
+
+/* ЦЕНЫ: те же цифры и места, но крупнее, ярче и с ровными цифрами */
+.mp.serif[class]{font-size:2rem;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+main .serif.text-2xl[class]:not(.mp){font-size:1.75rem;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+#cartList b,#total,#rTotal{font-variant-numeric:tabular-nums}
+
+/* ---------- 3. СТЕКЛО (glassmorphism) ---------- */
+.glass{background:rgba(22,16,13,.62);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%)}
+header nav.glass{background:rgba(13,9,7,.5);box-shadow:0 1px 0 rgba(255,244,230,.06);transition:background .6s var(--spring)}
+header nav.glass.scrolled{background:rgba(13,9,7,.8)}            /* при прокрутке шапка плавно «густеет» */
+
+/* ---------- 4. КАРТОЧКИ: объём, мягкие углы, свет под курсором ---------- */
+.card,.mc{position:relative;border-radius:28px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,244,230,.055),rgba(255,244,230,.02)),var(--card);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);box-shadow:var(--shadow-rest)}
+.card::after,.mc::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .6s var(--spring);
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(255,236,210,.09),transparent 45%)}      /* блик следует за курсором (--mx/--my ставит JS) */
+#catNav{border-radius:999px;padding:.4rem;box-shadow:var(--shadow-rest)}                                           /* категории как «сегмент-контрол» iOS */
+.sz,.cp,.moff,.mhit{border-radius:999px}
+.sz,.cp{transition:background .5s var(--spring),border-color .5s var(--spring),color .5s var(--spring),transform .5s var(--spring)}
+.sz:active,.cp:active{transform:scale(.94)}
+.inp{border-radius:14px}
+.inp:focus{box-shadow:0 0 0 4px rgba(216,154,91,.22)}
+
+/* ---------- 5. КНОПКИ: «осязаемые», пружинят при наведении и нажатии ---------- */
+.btn{border-radius:999px;padding:.85rem 1.6rem;font-weight:600;letter-spacing:-.01em;
+  transition:transform .6s var(--spring),box-shadow .6s var(--spring),background .4s,border-color .4s,color .4s}
+.btn-amber{background:linear-gradient(180deg,#f0b985,#c9824a);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 6px 16px -6px rgba(216,154,91,.55)}
+.madd{transition:transform .6s var(--spring),background .4s,color .4s,box-shadow .6s var(--spring)}
+.btn:active,.madd:active{transform:scale(.97);transition-duration:.15s}
+
+/* ---------- 6. АНИМАЦИИ ---------- */
+/* 6a. Reveal при прокрутке: элемент «выплывает» снизу и проявляется из прозрачности.
+       Класс .rv ставит JS (см. скрипт ниже), класс .in добавляется, когда элемент входит в экран */
+.rv{opacity:0;transform:translate3d(0,44px,0) scale(.985);
+  transition:opacity 1.1s var(--spring),transform 1.1s var(--spring),box-shadow .7s var(--spring),border-color .5s var(--spring);
+  transition-delay:var(--d,0s);will-change:opacity,transform}                /* --d — небольшая задержка, чтобы соседние карточки появлялись по очереди */
+.rv.in{opacity:1;transform:none;will-change:auto}
+/* карточки меню (.mc) используют ту же пружину */
+.mc{-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);transform:translate3d(0,36px,0) scale(.985);
+  transition:opacity 1s var(--spring),transform 1s var(--spring),box-shadow .7s var(--spring),border-color .5s var(--spring);transition-delay:var(--d,0s)}
+.mc.in{transform:none}
+/* 6b. Вход главного экрана */
+.rise{animation:rise 1.2s var(--spring) backwards}
+@keyframes rise{from{opacity:0;transform:translate3d(0,40px,0) scale(.98)}to{opacity:1;transform:none}}
+/* 6c. Hover: лёгкое увеличение и более глубокая тень. Только на устройствах с мышью */
+@media (hover:hover){
+  .card.rv.in:hover,.card:not(.rv):hover,.mc.in:hover,.hov:hover{transform:scale(1.014);box-shadow:var(--shadow-hover);border-color:rgba(216,154,91,.38)}
+  .card:hover::after,.mc:hover::after{opacity:1}
+  .btn:hover{transform:scale(1.04)}
+  .btn-amber:hover{box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 14px 32px -8px rgba(216,154,91,.7)}
+  .madd:hover{transform:scale(1.05);box-shadow:0 10px 24px -8px rgba(216,154,91,.6)}
+}
+.mc.in.off:hover{transform:none;box-shadow:var(--shadow-rest)}
+
+/* ---------- 7. Плавные «яблочные» углы (в браузерах, где это поддерживается) ---------- */
+@supports (corner-shape:squircle){.card,.mc,.btn,.glass,.inp{corner-shape:squircle}}
+
+@media (prefers-reduced-motion:reduce){.rv,.mc{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -541,6 +632,59 @@ loadMenu();setInterval(()=>{if(!document.hidden)loadMenu()},90000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadMenu()});
 drawCart();
 try{lucide.createIcons()}catch(e){}
+</script>
+<script id="apple-layer-js">
+/* =====================================================================
+   APPLE-LAYER JS: reveal при прокрутке, эффект шапки, свет под курсором.
+   Ни цены, ни фото, ни заказ не затрагиваются: скрипт только добавляет CSS-классы.
+   ===================================================================== */
+(function(){
+  /* --- 1. REVEAL: какие элементы «выплывают» при прокрутке --- */
+  const SEL='main h2, main h2 + p, main .card:not(.mc), #gal > *, .mcat > div:first-child, .mcat > p, #promo > *, #again > *, #wait';
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}     // вошёл в экран → запускаем анимацию
+  }),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  // после появления обнуляем задержку, чтобы hover срабатывал мгновенно
+  const settle=el=>el.addEventListener('transitionend',function f(e){if(e.propertyName==='opacity'){el.style.setProperty('--d','0s');el.removeEventListener('transitionend',f)}});
+  function tag(){
+    document.querySelectorAll(SEL).forEach(el=>{
+      if(el.dataset.rv)return;el.dataset.rv=1;
+      el.classList.add('rv');
+      el.style.setProperty('--d',Math.min([...el.parentNode.children].indexOf(el),5)*.07+'s');   // «каскад»: карточки по очереди
+      settle(el);io.observe(el);
+    });
+    document.querySelectorAll('.mc').forEach(el=>{                                 // карточки меню: переносим старую задержку в --d
+      if(el.dataset.rv)return;el.dataset.rv=1;
+      el.style.setProperty('--d',el.style.transitionDelay||'0s');el.style.transitionDelay='';settle(el);
+    });
+  }
+  tag();
+  let raf=0;                                                                       // меню перерисовывается с сервера → новые элементы тоже получают reveal
+  new MutationObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(tag)}).observe(document.querySelector('main'),{childList:true,subtree:true});
+
+  /* --- 2. Шапка «густеет» при прокрутке + главный текст плавно уходит вверх (parallax) --- */
+  const nav=document.querySelector('header nav'),heroText=document.querySelector('main>section:first-child .rise');
+  let tick=false;
+  function onScroll(){
+    if(tick)return;tick=true;
+    requestAnimationFrame(()=>{
+      const y=window.scrollY;
+      nav&&nav.classList.toggle('scrolled',y>8);
+      if(heroText&&y<900){const p=Math.min(y/520,1);heroText.style.translate='0 '+(-p*34)+'px';heroText.style.opacity=String(1-p*.7)}   // двигается только текст, фото не трогаем
+      tick=false;
+    });
+  }
+  addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+  /* --- 3. Свет под курсором на карточках (только на устройствах с мышью) --- */
+  if(matchMedia('(hover:hover)').matches){
+    document.addEventListener('pointermove',e=>{
+      const c=e.target.closest&&e.target.closest('.card,.mc');if(!c)return;
+      const r=c.getBoundingClientRect();
+      c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');
+    },{passive:true});
+  }
+})();
 </script>
 </body>
 </html>

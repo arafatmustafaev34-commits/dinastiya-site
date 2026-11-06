@@ -488,6 +488,7 @@ html.lite #menuGrid.focus .mc:not(.is-hover){filter:none}
   <div class="p-5 flex items-center justify-between border-b" style="border-color:var(--line)"><div class="serif font-bold text-xl">Ваш заказ</div><button id="closeCart" class="w-10 h-10 grid place-items-center rounded-full border btn-ghost" aria-label="Закрыть"><i data-lucide="x" class="w-5 h-5"></i></button></div>
   <div id="cartList" class="flex-1 overflow-y-auto p-5 space-y-3"></div>
   <form id="orderForm" class="p-5 border-t space-y-3" style="border-color:var(--line)" novalidate>
+    <input id="oHp" name="hp_field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none"><!-- ловушка: человек её не видит, бот заполняет -->
     <input id="oName" class="inp" placeholder="Ваше имя" autocomplete="name" maxlength="40">
     <input id="oPhone" class="inp" placeholder="Телефон" inputmode="tel" autocomplete="tel" maxlength="20">
     <select id="oWhen" class="inp" aria-label="Когда заберёте"><optgroup label="Заберу с собой"><option>С собой: как можно скорее</option><option>С собой: через 15 минут</option><option>С собой: через 30 минут</option><option>С собой: через 1 час</option></optgroup><optgroup label="Я уже в кофейне"><option>В кофейне: заберу на кассе</option></optgroup></select>
@@ -636,7 +637,7 @@ $('#burger').onclick=()=>{const m=$('#mob');m.classList.toggle('hidden');m.class
 document.querySelectorAll('#mob a').forEach(a=>a.onclick=()=>{$('#mob').classList.add('hidden');$('#mob').classList.remove('flex')});
 
 /* ===== Заказ ===== */
-const API_URL='https://script.google.com/macros/s/AKfycbyrh5v0X6e1ClYHOeova5mRnxr5EU_UCYrRDIpBY9QOavWenBvTy1NdRA8kZ_OPq13x/exec'; // ссылка на Apps Script для заказов (заканчивается на /exec). Пока пусто: тестовый режим
+const API_URL='/api/gas'; // защитный шлюз на Vercel (api/gas.js): лимиты по IP, кэш меню, подпись заказов. Сам Google-скрипт сайт больше не вызывает напрямую
 const kzt=n=>n.toLocaleString('ru-RU')+' ₸';
 const price=t=>parseInt(String(t).replace(/\D/g,''),10);
 let cart={},lastText='';
@@ -668,6 +669,7 @@ function showReceipt(n,p){
 }
 $('#rChat').onclick=()=>openChat(lastText);
 $('#rClose').onclick=()=>$('#rcpt').classList.replace('flex','hidden');
+let orderRid='',ridSig='';
 $('#orderForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const items=Object.values(cart),err=$('#oErr'),name=$('#oName').value.trim(),phone=$('#oPhone').value.trim();
@@ -679,14 +681,21 @@ $('#orderForm').addEventListener('submit',async e=>{
   let num;
   if(API_URL){
     const btn=$('#oBtn');btn.disabled=true;btn.textContent='Отправляем…';
+    // rid — номер попытки: если связь оборвалась и гость нажмёт ещё раз, сервер вернёт уже созданный заказ, а не сделает второй
+    const sig=JSON.stringify(p.items)+name+phone;if(sig!==ridSig){ridSig=sig;orderRid=Math.random().toString(36).slice(2,12)+Date.now().toString(36)}
     try{
-      const j=await (await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)})).json();
+      const j=await (await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...p,hp:$('#oHp').value,ft:Math.round(performance.now()),rid:orderRid})})).json();
       if(!j.ok){
+        if(j.error==='rate'||j.error==='busy'||j.error==='timeout'){
+          err.textContent=j.error==='rate'?'Слишком много заказов подряд. Подождите пару минут и попробуйте снова'
+            :j.error==='busy'?'Сейчас очень много заказов. Попробуйте через несколько минут или закажите на кассе'
+            :'Сервер отвечает медленно. Нажмите «Оформить заказ» ещё раз: заказ не задублируется';
+          btn.disabled=false;btn.textContent='Оформить заказ';return}
         if(j.error==='stop'||j.error==='menu'){
           err.textContent=j.error==='stop'?('Закончилось: '+(j.items||[]).join(', ')+'. Уберите из заказа и попробуйте снова'):'Меню обновилось. Проверьте корзину и повторите';
-          btn.disabled=false;btn.textContent='Оформить заказ';menuSig='';loadMenu();return}
+          ridSig='';btn.disabled=false;btn.textContent='Оформить заказ';menuSig='';loadMenu();return}
         throw new Error('fail')}
-      num=j.number;p.code=j.code;if(typeof j.total==='number')p.total=j.total;
+      num=j.number;p.code=j.code;if(typeof j.total==='number')p.total=j.total;ridSig='';orderRid='';
     }catch(x){err.textContent='Не удалось отправить заказ. Попробуйте ещё раз или напишите нам в чат.';btn.disabled=false;btn.textContent='Оформить заказ';return}
     btn.disabled=false;btn.textContent='Оформить заказ';
   }else num='T'+String(Date.now()).slice(-4);

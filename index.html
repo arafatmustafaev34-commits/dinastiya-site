@@ -333,6 +333,66 @@ main>section:first-child:hover .hero-light{opacity:1}
 .btn,.madd,#cartBtn{overflow:hidden}
 @media (hover:none),(pointer:coarse),(prefers-reduced-motion:reduce){#aura,.hero-light{display:none}}
 </style>
+<style id="ux-layer">
+/* =====================================================================
+   UX-LAYER — блок «От зерна до чашки», «Сейчас открыто», поиск по меню.
+   ===================================================================== */
+/* ---------- История: оглавление шагов слева (компьютер) + непрозрачные карточки ---------- */
+.stack{max-width:1240px;margin:0 auto}
+@media (min-width:1100px){.stack{display:grid;grid-template-columns:230px minmax(0,1fr);gap:56px;align-items:start}}
+.srail{display:none;list-style:none;margin:0;padding:0 0 0 22px;position:sticky;top:140px;--rp:0}
+@media (min-width:1100px){.srail{display:grid;gap:26px}}
+.srail::before,.srail::after{content:"";position:absolute;left:0;top:6px;bottom:6px;width:2px;border-radius:2px;background:rgba(255,244,230,.12)}
+.srail::after{background:var(--amber);transform-origin:top;transform:scaleY(var(--rp));transition:transform .9s var(--spring)}
+.srail li{display:grid;gap:2px;color:rgba(232,223,211,.42);transition:color .5s var(--spring),transform .6s var(--spring);cursor:pointer}
+.srail li b{font-size:.8rem;font-weight:700;letter-spacing:.02em}
+.srail li span{font-size:1.15rem;font-weight:600;line-height:1.2}
+.srail li.on{color:var(--foam,#f6ecd9);transform:translateX(4px)}
+.srail li.on b{color:var(--amber)}
+.srail li.done{color:rgba(232,223,211,.7)}
+
+.scard{max-width:none;height:auto;min-height:min(56svh,440px);margin:0 0 12svh;background:var(--tint)!important;border:1px solid rgba(255,244,230,.09);
+  grid-template-columns:auto 1fr;align-items:center}
+.scard:last-child{margin-bottom:0}
+.scard>*{opacity:var(--sf,1);transition:opacity .25s linear}       /* накрытая карточка гасит текст: ничего не просвечивает */
+.snum{font-size:clamp(4.5rem,11vw,8.5rem)}
+.sbody{max-width:38rem}
+.smeta{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px}
+.sstep{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:700;color:var(--amber)}
+.sbar{display:inline-flex;gap:5px}
+.sbar i{width:22px;height:3px;border-radius:2px;background:rgba(255,244,230,.16)}
+.sbar i.on{background:var(--amber)}
+.stitle{font-size:clamp(2rem,4.4vw,3.2rem);margin-top:14px}
+.stext{font-size:clamp(1.02rem,1.6vw,1.15rem);line-height:1.6;color:rgba(232,223,211,.82);max-width:36rem}
+.sfacts{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-wrap:wrap;gap:10px}
+.sfacts li{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;border:1px solid rgba(255,244,230,.14);font-size:.95rem;color:#f6ecd9}
+.sfacts li i{color:var(--amber)}
+.scta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+@media (max-width:640px){
+  .scard{grid-template-columns:1fr;min-height:0;padding:1.6rem 1.4rem;margin-bottom:8svh}
+  .snum{font-size:3.6rem}
+  .stitle{font-size:2rem}
+}
+/* ---------- «Сейчас открыто» ---------- */
+.open-now{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,238,210,.05);font-size:.95rem;font-weight:600;color:#f6ecd9}
+.open-now i{width:9px;height:9px;border-radius:50%;background:#8fdc9a;box-shadow:0 0 0 0 rgba(143,220,154,.5);animation:onair 2.2s infinite}
+.open-now.closed i{background:#e58c7a;animation:none}
+.open-now.soon i{background:#f0c27a}
+@keyframes onair{70%{box-shadow:0 0 0 8px rgba(143,220,154,0)}100%{box-shadow:0 0 0 0 rgba(143,220,154,0)}}
+.closed-note{font-size:.85rem;line-height:1.45;text-align:center;color:#f0c27a;margin-top:4px}
+/* ---------- Поиск по меню ---------- */
+.msearch{position:relative;display:flex;align-items:center;margin-top:28px;max-width:520px}
+.msearch>i{position:absolute;left:18px;color:var(--muted);pointer-events:none}
+.msearch input{width:100%;min-height:50px;padding:0 46px;border-radius:999px;border:1px solid var(--line);background:rgba(255,238,210,.05);color:var(--text,#f6ecd9);font-size:1rem;outline:none;transition:border-color .3s,background .3s}
+.msearch input::placeholder{color:var(--muted)}
+.msearch input:focus{border-color:var(--amber);background:rgba(255,238,210,.08)}
+.msearch input::-webkit-search-cancel-button{display:none}
+.msearch button{position:absolute;right:8px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,238,210,.08);color:inherit;font-size:20px;line-height:1;cursor:pointer}
+.mq-empty{margin-top:18px;color:var(--muted)}
+.mq-empty button{color:var(--amber);background:none;border:0;padding:0;font:inherit;text-decoration:underline;cursor:pointer}
+.gone{display:none!important}
+mark.mq{background:rgba(216,154,91,.28);color:inherit;border-radius:3px;padding:0 1px}
+</style>
 </head>
 <body>
 <header class="fixed top-0 inset-x-0 z-50" style="padding-top:env(safe-area-inset-top,0px)">
@@ -351,7 +411,7 @@ main>section:first-child:hover .hero-light{opacity:1}
   <div class="hero-bg" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="max-w-6xl mx-auto px-5 grid md:grid-cols-2 gap-10 items-center">
     <div class="rise">
-      <p class="serif italic text-lg" style="color:var(--amber)">Вкус, с которого начинается день</p>
+      <p class="open-now" id="openNow" aria-live="polite"><i aria-hidden="true"></i><span>Ежедневно с 8:00 до 22:00</span></p>
       <h1 class="serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] mt-4">Кофе и напитки, к которым возвращаются</h1>
       <p class="mt-6 text-lg max-w-md leading-relaxed" style="color:var(--muted)">Уютное место для утреннего кофе, холодного лимонада после работы и вечера с друзьями. Ароматный кофе, чаи и коктейли в тёплом зале.</p>
       <div class="mt-8 flex flex-wrap gap-3"><a href="#" data-book class="btn btn-amber"><i data-lucide="calendar-check" class="w-4 h-4"></i> Забронировать столик</a><a href="#menu" class="btn btn-ghost">Смотреть меню</a></div>
@@ -405,9 +465,9 @@ main>section:first-child:hover .hero-light{opacity:1}
     <header class="story-head">
       <p class="story-eyebrow">Путь одной чашки</p>
       <h2 class="story-h">От зерна до чашки</h2>
-      <p class="scrub" id="scrub">Мы выбираем отборные зёрна, обжариваем их свежо и готовим каждую чашку с душой. Так в вашем напитке остаются чистый вкус и тепло.</p>
+      <p class="scrub" id="scrub">Четыре шага, из которых складывается вкус каждой чашки «Династии»: зерно, обжарка, состав и внимание бариста.</p>
     </header>
-    <div class="stack"><article class="scard" style="--i:0;--tint:rgba(112,152,84,.30)"><div class="snum" aria-hidden="true">01</div><div><div class="stag"><i data-lucide="sprout" class="w-4 h-4"></i> Этап 1 · зелёное зерно</div><h3 class="stitle">Отборные зёрна</h3><p class="stext">Всё начинается с зелёного зерна. Мы выбираем отборные зёрна премиального качества, чтобы вкус в чашке был чистым и насыщенным.</p></div></article><article class="scard" style="--i:1;--tint:rgba(196,128,62,.28)"><div class="snum" aria-hidden="true">02</div><div><div class="stag"><i data-lucide="flame" class="w-4 h-4"></i> Этап 2 · огонь</div><h3 class="stitle">Свежая обжарка</h3><p class="stext">Огонь раскрывает характер зерна: оно темнеет, появляются аромат и сладость. Поэтому мы делаем ставку на свежую обжарку.</p></div></article><article class="scard" style="--i:2;--tint:rgba(128,76,44,.32)"><div class="snum" aria-hidden="true">03</div><div><div class="stag"><i data-lucide="leaf" class="w-4 h-4"></i> Этап 3 · чистый вкус</div><h3 class="stitle">Натуральный состав</h3><p class="stext">Кофе, молоко, чай, ягоды и фрукты: в напитках мы делаем ставку на натуральные ингредиенты.</p></div></article><article class="scard" style="--i:3;--tint:rgba(216,154,91,.26)"><div class="snum" aria-hidden="true">04</div><div><div class="stag"><i data-lucide="heart" class="w-4 h-4"></i> Этап 4 · ваша чашка</div><h3 class="stitle">Сделано с душой</h3><p class="stext">И последний ингредиент — внимание бариста. Каждую чашку готовим так, будто делаем её для друга.</p></div></article></div>
+    <div class="stack"><ol class="srail" id="srail" aria-label="Шаги"><li data-s="0"><b>01</b><span>Отборные зёрна</span></li><li data-s="1"><b>02</b><span>Свежая обжарка</span></li><li data-s="2"><b>03</b><span>Натуральный состав</span></li><li data-s="3"><b>04</b><span>Сделано с душой</span></li></ol><div class="scards"><article class="scard" data-step="0" style="--i:0;--tint:#232b1d" aria-labelledby="st0"><div class="snum" aria-hidden="true">01</div><div class="sbody"><div class="smeta"><span class="sstep"><i data-lucide="sprout" class="w-4 h-4"></i>Шаг 1 из 4</span><span class="sbar" aria-hidden="true"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></span></div><h3 class="stitle" id="st0">Отборные зёрна</h3><p class="stext">Всё начинается с зерна. Мы берём отборные зёрна премиального качества: от них зависит главное в чашке.</p><ul class="sfacts"><li><i data-lucide="gem" class="w-4 h-4"></i>Премиум качество</li><li><i data-lucide="sparkles" class="w-4 h-4"></i>Чистый, насыщенный вкус</li></ul></div></article><article class="scard" data-step="1" style="--i:1;--tint:#35241a" aria-labelledby="st1"><div class="snum" aria-hidden="true">02</div><div class="sbody"><div class="smeta"><span class="sstep"><i data-lucide="flame" class="w-4 h-4"></i>Шаг 2 из 4</span><span class="sbar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span></div><h3 class="stitle" id="st1">Свежая обжарка</h3><p class="stext">Огонь раскрывает характер зерна: оно темнеет, появляются аромат и естественная сладость. Поэтому мы работаем со свежей обжаркой.</p><ul class="sfacts"><li><i data-lucide="wind" class="w-4 h-4"></i>Яркий аромат</li><li><i data-lucide="candy" class="w-4 h-4"></i>Естественная сладость</li></ul></div></article><article class="scard" data-step="2" style="--i:2;--tint:#2c1e16" aria-labelledby="st2"><div class="snum" aria-hidden="true">03</div><div class="sbody"><div class="smeta"><span class="sstep"><i data-lucide="leaf" class="w-4 h-4"></i>Шаг 3 из 4</span><span class="sbar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span></div><h3 class="stitle" id="st2">Натуральный состав</h3><p class="stext">Бариста готовит каждый напиток под заказ. В чашке только то, что нужно: кофе, молоко, чай, ягоды и фрукты.</p><ul class="sfacts"><li><i data-lucide="milk" class="w-4 h-4"></i>Кофе, молоко и чай</li><li><i data-lucide="cherry" class="w-4 h-4"></i>Ягоды и фрукты</li></ul></div></article><article class="scard" data-step="3" style="--i:3;--tint:#3b2a1d" aria-labelledby="st3"><div class="snum" aria-hidden="true">04</div><div class="sbody"><div class="smeta"><span class="sstep"><i data-lucide="heart" class="w-4 h-4"></i>Шаг 4 из 4</span><span class="sbar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></div><h3 class="stitle" id="st3">Сделано с душой</h3><p class="stext">Последний ингредиент — внимание. Забирайте напиток с собой или оставайтесь в тёплом зале. Заказ можно оформить заранее с телефона.</p><div class="scta"><a href="#menu" class="btn btn-amber">Выбрать напиток</a><a href="#book" class="btn btn-ghost">Забронировать столик</a></div></div></article></div></div>
   </div>
 </section>
 
@@ -417,6 +477,8 @@ main>section:first-child:hover .hero-light{opacity:1}
   <div id="wait" class="hidden mt-5 inline-flex items-center gap-3 px-4 py-2 rounded-full glass border text-sm" style="border-color:var(--line)"><span class="wdot"></span><span id="waitTxt"></span></div>
   <div id="promo" class="mt-8"></div>
   <div id="again" class="hidden mt-6"></div>
+  <div class="msearch" role="search"><i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i><input id="mq" type="search" placeholder="Найти напиток, например «латте»" aria-label="Поиск по меню" autocomplete="off"><button type="button" id="mqClear" aria-label="Очистить поиск" hidden>×</button></div>
+  <p class="mq-empty" id="mqEmpty" hidden></p>
   <div id="catNav" class="sticky z-40 mt-8 glass border rounded-2xl p-2 flex gap-2 overflow-x-auto" style="top:calc(env(safe-area-inset-top,0px) + 72px);border-color:var(--line)"></div>
   <div id="menuGrid"></div>
 </section>
@@ -517,6 +579,7 @@ main>section:first-child:hover .hero-light{opacity:1}
     <button id="oBtn" class="btn btn-amber w-full" type="submit">Оформить заказ</button>
     <p id="oErr" class="text-sm text-center min-h-5" style="color:#e58c7a"></p>
     <p class="text-xs text-center" style="color:var(--muted)">Оплата на кассе при получении заказа</p>
+    <p class="closed-note" id="closedNote" hidden></p>
   </form>
 </aside>
 <div id="rcpt" class="fixed inset-0 z-[85] hidden items-center justify-center p-5 bg-black/75 overflow-y-auto">
@@ -928,8 +991,8 @@ try{lucide.createIcons()}catch(e){}
       // элемент; max — предел смещения (px); lift — менять ли глубину тени. Цель магнита задаётся в sel (любой CSS-селектор)
     fly:{enabled:true, duration:.8, pop:true},
       // fly — капля «улетает» в корзину при нажатии «Добавить» (duration — сек); pop — цена «встряхивается», когда меняете объём
-    stack:{scaleDrop:.055, dim:.38, fade:.32, lift:-12},
-      // как сильно карточка, которую накрыла следующая, уменьшается (scaleDrop) / темнеет (dim) / становится прозрачнее (fade) / приподнимается (lift, px)
+    stack:{scaleDrop:.05, dim:.45, fade:1, lift:-12},
+      // как сильно карточка, которую накрыла следующая, уменьшается (scaleDrop) / темнеет (dim) / гасит свой текст (fade: 1 = полностью) / приподнимается (lift, px)
     steam:{rise:170},
       // на сколько единиц (в системе SVG) линии пара «вытягиваются» вверх за всю прокрутку истории; 0 — только собственная анимация
     roast:{from:[104,142,76], mid:[150,98,52], to:[58,32,20]},
@@ -1172,7 +1235,7 @@ try{lucide.createIcons()}catch(e){}
         if(!cards[i+1])return;
         const k=clamp((cardH[i]+cardTop[i]-nextTop[i])/(cardH[i]-20),0,1);
         put(card,'transform','translate3d(0,'+(CFG.stack.lift*k).toFixed(1)+'px,0) scale('+(1-CFG.stack.scaleDrop*k).toFixed(4)+')');
-        put(card,'opacity',(1-CFG.stack.fade*k).toFixed(3));
+        putVar(card,'--sf',(1-CFG.stack.fade*k).toFixed(3));
         putVar(card,'--sd',(CFG.stack.dim*k).toFixed(3));
       });
     }
@@ -1196,6 +1259,80 @@ try{lucide.createIcons()}catch(e){}
   let queued=false;
   const queue=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render()})};
   addEventListener('scroll',queue,{passive:true});addEventListener('resize',()=>{measure();queue()});render();
+})();
+</script>
+<script id="ux-layer-js">
+/* =====================================================================
+   UX-LAYER JS: шаги истории, «Сейчас открыто», поиск по меню
+   ===================================================================== */
+(function(){
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+
+  /* ---------- 1. Оглавление шагов: подсвечивает шаг, который сейчас сверху стопки ---------- */
+  const rail=$('#srail'),cards=$$('.scard');
+  const setStep=i=>{if(!rail)return;rail.style.setProperty('--rp',cards.length>1?i/(cards.length-1):1);
+    rail.querySelectorAll('li').forEach((li,j)=>{li.classList.toggle('on',j===i);li.classList.toggle('done',j<i)})};
+  if(cards.length){
+    // активный шаг = последняя карточка, верх которой уже поднялся выше середины экрана (считаем только когда карточки пересекают линию)
+    const pick=()=>{let a=0;cards.forEach((c,i)=>{if(c.getBoundingClientRect().top<innerHeight*.45)a=i});setStep(a)};
+    const io=new IntersectionObserver(pick,{rootMargin:'0px 0px -55% 0px',threshold:[0,.01,.5,1]});
+    cards.forEach(c=>io.observe(c));
+    setStep(0);
+    // клик по шагу в оглавлении: прокрутить к моменту, когда эта карточка ложится на стопку
+    if(rail)rail.addEventListener('click',e=>{const li=e.target.closest('li');if(!li)return;const n=+li.dataset.s,box=$('.scards');
+      let off=0;for(let j=0;j<n;j++)off+=cards[j].offsetHeight+parseFloat(getComputedStyle(cards[j]).marginBottom);
+      const y=box.getBoundingClientRect().top+scrollY+off-(parseFloat(getComputedStyle(cards[n]).top)||0)+2;
+      scrollTo({top:y,behavior:'smooth'})});
+  }
+
+  /* ---------- 2. «Сейчас открыто» по времени Алматы ---------- */
+  const OPEN=8*60, CLOSE=22*60, TZ='Asia/Almaty';
+  const nowMin=()=>{try{const p=new Intl.DateTimeFormat('ru-RU',{hour:'numeric',minute:'numeric',hourCycle:'h23',timeZone:TZ}).formatToParts(new Date());
+    return +p.find(x=>x.type==='hour').value*60+ +p.find(x=>x.type==='minute').value}catch(e){const d=new Date();return d.getHours()*60+d.getMinutes()}};
+  function openState(){
+    const m=nowMin(),el=$('#openNow'),note=$('#closedNote');
+    let cls='',txt;
+    if(m>=OPEN&&m<CLOSE){txt=CLOSE-m<=60?'Открыто, закрываемся в 22:00. Успейте заказать':'Сейчас открыто, работаем до 22:00';if(CLOSE-m<=60)cls='soon'}
+    else{cls='closed';txt=m<OPEN?'Сейчас закрыто, откроемся в 8:00':'Сейчас закрыто, откроемся завтра в 8:00'}
+    if(el){el.className='open-now'+(cls?' '+cls:'');el.querySelector('span').textContent=txt}
+    if(note){const closed=cls==='closed';note.hidden=!closed;if(closed)note.textContent='Кофейня сейчас закрыта. Заказ примут и приготовят после открытия в 8:00.'}
+  }
+  openState();setInterval(openState,60000);
+
+  /* ---------- 3. Поиск по меню ---------- */
+  const q=$('#mq'),clr=$('#mqClear'),empty=$('#mqEmpty'),grid=$('#menuGrid');
+  if(q&&grid){
+    const norm=s=>String(s).toLowerCase().replace(/ё/g,'е').trim();
+    const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const restore=el=>{el.querySelectorAll('mark.mq').forEach(m=>m.replaceWith(document.createTextNode(m.textContent)));el.normalize()};
+    const mark=(el,t)=>{if(!t)return;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT),nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+      const re=new RegExp(escRe(t).replace(/е/g,'[её]'),'gi');
+      nodes.forEach(n=>{const s=n.nodeValue;if(!re.test(s))return;re.lastIndex=0;const f=document.createDocumentFragment();let last=0,m;
+        while((m=re.exec(s))){f.append(s.slice(last,m.index));const k=document.createElement('mark');k.className='mq';k.textContent=m[0];f.append(k);last=m.index+m[0].length}
+        f.append(s.slice(last));n.replaceWith(f)})};
+    function apply(){
+      const t=norm(q.value);let shown=0;
+      grid.querySelectorAll('.mcat').forEach(cat=>{
+        let n=0;
+        cat.querySelectorAll('.mc').forEach(c=>{
+          const name=c.querySelector('h4'),desc=c.querySelector('p');
+          [name,desc].forEach(x=>x&&restore(x));
+          const ok=!t||norm((name?name.textContent:'')+' '+(desc?desc.textContent:'')).includes(t);
+          c.classList.toggle('gone',!ok);if(ok){n++;if(t){c.classList.add('in');[name,desc].forEach(x=>x&&mark(x,t))}}
+        });
+        cat.classList.toggle('gone',n===0);shown+=n;
+        const link=document.querySelector('#catNav [data-cat="'+cat.id.slice(2)+'"]');if(link)link.classList.toggle('gone',n===0);
+      });
+      clr.hidden=!t;
+      empty.hidden=!(t&&!shown);
+      if(t&&!shown){empty.innerHTML='';empty.append('По запросу «'+q.value.trim()+'» ничего нет. ');const b=document.createElement('button');b.type='button';b.textContent='Показать всё меню';b.onclick=()=>{q.value='';apply();q.focus()};empty.append(b)}
+    }
+    let t;q.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(apply,120)});
+    q.addEventListener('keydown',e=>{if(e.key==='Escape'){q.value='';apply()}});
+    clr.addEventListener('click',()=>{q.value='';apply();q.focus()});
+    new MutationObserver(()=>{if(q.value)apply()}).observe(grid,{childList:true});   // меню обновилось из таблицы → фильтр применяется снова
+  }
+  try{lucide.createIcons()}catch(e){}
 })();
 </script>
 <script id="extra-layer-js">

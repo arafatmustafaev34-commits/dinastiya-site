@@ -166,6 +166,113 @@ header nav.glass.scrolled{background:rgba(13,9,7,.8)}            /* при пр�
 
 @media (prefers-reduced-motion:reduce){.rv,.mc{opacity:1;transform:none}}
 </style>
+<style id="awwwards-layer">
+/* =====================================================================
+   AWWWARDS-LAYER — интерактивный сторителлинг (поверх слоя Apple и основного CSS).
+   Все числа, которые удобно крутить, собраны в CFG в начале скрипта awwwards-layer-js.
+   Откат: удалите блок стилей awwwards-layer, скрипт awwwards-layer-js и секции #story и #finale.
+   ===================================================================== */
+
+/* ---------- 1. HERO: «дышащий» фон и 3D-перспектива ---------- */
+main>section:first-child{position:relative;isolation:isolate;overflow:clip}
+.hero-bg{position:absolute;inset:-12% -6%;z-index:-1;pointer-events:none;overflow:hidden}
+.hero-bg i{position:absolute;border-radius:50%;filter:blur(70px);will-change:transform}
+/* три пятна: кофе, золото, крем. Каждое «дышит» со своим периодом (19 / 23 / 27 сек): меняйте animation-duration */
+.hero-bg i:nth-child(1){width:55vmax;height:55vmax;left:-12vmax;top:-18vmax;opacity:.7;background:radial-gradient(circle,#5a3622 0%,transparent 68%);animation:breathe1 19s ease-in-out infinite alternate}
+.hero-bg i:nth-child(2){width:46vmax;height:46vmax;right:-10vmax;top:4vmax;opacity:.5;background:radial-gradient(circle,rgba(216,154,91,.8),transparent 66%);animation:breathe2 23s ease-in-out infinite alternate}
+.hero-bg i:nth-child(3){width:40vmax;height:40vmax;left:26vw;bottom:-24vmax;opacity:.28;background:radial-gradient(circle,rgba(238,222,196,.6),transparent 66%);animation:breathe3 27s ease-in-out infinite alternate}
+@keyframes breathe1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(9vmax,6vmax,0) scale(1.2)}}
+@keyframes breathe2{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(-8vmax,5vmax,0) scale(.9)}}
+@keyframes breathe3{from{transform:translate3d(0,0,0) scale(.9)}to{transform:translate3d(6vmax,-5vmax,0) scale(1.15)}}
+.tilt{transform-style:preserve-3d;will-change:transform}
+.tilt>.glass{transform:translateZ(var(--depth,46px))}   /* плашка «Средний чек» парит над фото */
+
+/* ---------- 2. ТЕКСТ ПО СЛОВАМ (Scroll-triggered text reveal) ---------- */
+.wo{display:inline-block;overflow:hidden;vertical-align:top;padding:.04em .02em .16em;margin-bottom:-.16em}
+.wi{display:inline-block;transform:translate3d(0,118%,0) rotate(4deg);transform-origin:0 100%;opacity:0;
+  transition:transform 1.15s var(--spring) calc(var(--i)*var(--ws,.05s)),opacity .8s var(--spring) calc(var(--i)*var(--ws,.05s))}
+[data-split].in .wi{transform:none;opacity:1}
+main h1[data-split]{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text)}
+main h1[data-split] .wi{background:linear-gradient(180deg,#fff 0%,#ecdcc4 55%,#d19c63 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sw{opacity:.16;transition:opacity .35s linear}                       /* слова абзаца «зажигаются» вслед за прокруткой */
+
+/* ---------- 3. ИСТОРИЯ: зёрна меняют цвет, пар поднимается, карточки наслаиваются ---------- */
+main>section.story,main>section.finale{padding:0}
+.story{position:relative;--bean:#688f4c;--bean-d:#44652f}
+.story-bg{position:sticky;top:0;height:100svh;margin-bottom:-100svh;overflow:hidden;pointer-events:none;z-index:0}
+.story-bg svg{position:absolute;inset:0;width:100%;height:100%}
+.bl{will-change:transform}
+.steam path{fill:none;stroke:rgba(255,236,210,.45);stroke-width:3;stroke-linecap:round;stroke-dasharray:90 520;
+  animation:steam 9s linear infinite;filter:blur(1.4px)}       /* дуги пара «вытягиваются» вверх. Скорость: animation-duration у каждого path */
+@keyframes steam{from{stroke-dashoffset:90}to{stroke-dashoffset:-440}}
+.story-in{position:relative;z-index:1}
+.story-head{max-width:820px;margin:0 auto;padding:clamp(5rem,12vw,9rem) 1.25rem clamp(2.5rem,6vw,4.5rem);text-align:center}
+.story-eyebrow{color:var(--amber);font-weight:600;letter-spacing:-.01em}
+.story-h{font-size:clamp(2.4rem,7vw,4.8rem);line-height:1.04;font-weight:700;letter-spacing:-.04em;margin-top:.5rem}
+.scrub{margin-top:1.6rem;font-size:clamp(1.15rem,2.6vw,1.6rem);line-height:1.5;color:var(--text);font-weight:500;letter-spacing:-.015em}
+.stack{padding:0 1.25rem 12svh}
+/* КАРТОЧКИ-СТОПКА: каждая «прилипает» (sticky) чуть ниже предыдущей, а JS уменьшает и затемняет те, что уже накрыты */
+.scard{position:sticky;top:calc(88px + var(--i)*20px);max-width:980px;height:min(62svh,500px);margin:0 auto 14svh;
+  border-radius:36px;padding:clamp(1.4rem,4vw,3rem);display:grid;grid-template-columns:auto 1fr;gap:clamp(1rem,3vw,2.5rem);align-items:center;
+  background:linear-gradient(160deg,var(--tint),rgba(27,20,16,.93) 72%);border:1px solid var(--line);box-shadow:var(--shadow-hover);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);
+  transform:translate3d(0,var(--sy,0px),0) scale(var(--ss,1));transform-origin:50% 0;filter:brightness(var(--sb,1));opacity:var(--so,1);will-change:transform,opacity}
+.scard:last-child{margin-bottom:0}
+.snum{font-size:clamp(4rem,15vw,9.5rem);font-weight:700;line-height:.9;letter-spacing:-.06em;
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(216,154,91,.22));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stag{display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;font-weight:600;color:var(--amber);padding:.3rem .8rem;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.2)}
+.stitle{margin-top:.9rem;font-size:clamp(1.7rem,4.4vw,3rem);line-height:1.05;font-weight:700;letter-spacing:-.035em}
+.stext{margin-top:.8rem;font-size:clamp(.98rem,1.8vw,1.15rem);line-height:1.6;color:var(--muted);max-width:34rem}
+
+/* ---------- 4. ИНТЕРАКТИВНОЕ МЕНЮ: осязаемые карточки, магнит, динамический фокус ---------- */
+/* Ручки «динамического фокуса»: как сильно остальные карточки уходят в расфокус, когда курсор над одной из них */
+#menuGrid{--focus-blur:1.5px;--focus-sat:.45;--focus-bright:.82;--focus-op:.72}
+#menuGrid.focus .mc:not(.is-hover){filter:saturate(var(--focus-sat)) brightness(var(--focus-bright)) blur(var(--focus-blur));opacity:var(--focus-op)}
+/* ТЕНЬ, КОТОРАЯ ЖИВЁТ: многослойная тень строится из трёх переменных, их каждый кадр двигает пружина в JS
+   --lift (0…1): «приподнятость» над столом — чем больше, тем глубже и мягче тень
+   --sx/--sy: смещение тени в сторону, противоположную сдвигу карточки к курсору (как будто свет сверху) */
+.mc,#gal>*{--lift:0;--sx:0px;--sy:0px;will-change:translate;
+  --mc-shadow:0 0 0 .5px rgba(255,244,230,.05),
+    calc(var(--sx)*.4) calc(1px + var(--sy)*.4 + var(--lift)*1px) 1px rgba(0,0,0,.16),
+    calc(var(--sx)*.8) calc(2px + var(--sy)*.8 + var(--lift)*3px) 2px rgba(0,0,0,.14),
+    calc(var(--sx)*1.6) calc(4px + var(--sy)*1.6 + var(--lift)*6px) 4px rgba(0,0,0,.12),
+    calc(var(--sx)*3.2) calc(8px + var(--sy)*3.2 + var(--lift)*12px) calc(8px + var(--lift)*8px) rgba(0,0,0,.10),
+    calc(var(--sx)*6) calc(16px + var(--sy)*6 + var(--lift)*28px) calc(24px + var(--lift)*32px) calc(-4px - var(--lift)*6px) rgba(0,0,0,calc(.18 + var(--lift)*.32)),
+    inset 0 1px 0 rgba(255,244,230,calc(.07 + var(--lift)*.05));
+  box-shadow:var(--mc-shadow)}
+.mc.in:hover,.mc.in.off:hover{box-shadow:var(--mc-shadow)}            /* тень управляет только пружина, а не CSS-переход */
+.mc{transition:opacity 1s var(--spring),transform 1s var(--spring),border-color .5s var(--spring),filter .7s var(--spring);transition-delay:var(--d,0s)}
+.mc:active{transform:scale(.985)!important;transition-duration:.15s}   /* «нажатие» на карточку */
+.btn,.madd,#cartBtn{will-change:translate}                             /* translate ставит JS-пружина «магнита» */
+/* Микро-магия: капля, «улетающая» в корзину, и «встряска» цены при смене объёма */
+.fly{position:fixed;left:0;top:0;width:14px;height:14px;border-radius:50%;z-index:120;pointer-events:none;
+  background:radial-gradient(circle at 30% 30%,#ffe3b8,#d89a5b);box-shadow:0 0 18px rgba(216,154,91,.85)}
+
+/* ---------- 5. ФИНАЛ: «Заглянуть в гости» растёт на весь экран ---------- */
+.finale{position:relative;height:260svh}
+.finale-in{position:sticky;top:0;height:100svh;display:grid;place-items:center;overflow:hidden;text-align:center;padding:0 1rem}
+.steam-f{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.5}
+.finale-t{font-size:min(17vw,30svh);line-height:.92;font-weight:700;letter-spacing:-.05em;transform:scale(var(--fs,.28));opacity:var(--fo,0);will-change:transform,opacity;
+  background:linear-gradient(180deg,#fff7e8 0%,#e8c28e 55%,#b9743a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.1em}
+.finale-cta{margin-top:clamp(1rem,4vh,2.4rem);display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center;opacity:var(--fc,0);transform:translateY(calc((1 - var(--fc,0))*28px));position:relative;z-index:2}
+
+/* ---------- 6. Индикатор прокрутки ---------- */
+#sprog{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:2px;z-index:65;transform-origin:0 50%;transform:scaleX(var(--sp,0));
+  background:linear-gradient(90deg,#d89a5b,#fff1d6);pointer-events:none}
+html.lerp{scroll-behavior:auto!important}                              /* включается, когда работает инерционный скролл */
+
+@media (max-width:640px){
+  .hero-bg i{filter:blur(44px)}                                       /* на телефонах фон легче */
+  .scard{grid-template-columns:1fr;height:auto;min-height:56svh;align-content:center;top:calc(78px + var(--i)*14px)}
+  .snum{font-size:4.2rem}
+  .finale{height:200svh}
+}
+@media (prefers-reduced-motion:reduce){
+  .wi{transform:none;opacity:1}.sw{opacity:1}
+  .scard{transform:none!important;filter:none!important;opacity:1!important}
+  .finale{height:auto}.finale-in{position:static;height:auto;padding:5rem 1rem}.finale-t{transform:none;opacity:1}.finale-cta{opacity:1;transform:none}
+}
+</style>
 </head>
 <body>
 <header class="fixed top-0 inset-x-0 z-50" style="padding-top:env(safe-area-inset-top,0px)">
@@ -181,6 +288,7 @@ header nav.glass.scrolled{background:rgba(13,9,7,.8)}            /* при пр�
 
 <main id="top">
 <section class="pt-28 pb-16 md:pt-36">
+  <div class="hero-bg" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="max-w-6xl mx-auto px-5 grid md:grid-cols-2 gap-10 items-center">
     <div class="rise">
       <p class="serif italic text-lg" style="color:var(--amber)">Вкус, с которого начинается день</p>
@@ -220,6 +328,26 @@ header nav.glass.scrolled{background:rgba(13,9,7,.8)}            /* при пр�
       </ol>
     </div>
     <div class="ph min-h-[280px]" data-photo="about"><i data-lucide="utensils"></i></div>
+  </div>
+</section>
+
+<section id="story" class="story" aria-label="От зерна до чашки">
+  <div class="story-bg" aria-hidden="true">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs><g id="bean"><ellipse rx="26" ry="38" style="fill:var(--bean)"/><path d="M -3 -36 C 12 -14, -12 14, 3 36" style="fill:none;stroke:var(--bean-d);stroke-width:4;stroke-linecap:round"/></g></defs>
+      <g class="bl l-far" style="opacity:.34;filter:blur(3px)"><use href="#bean" transform="translate(70 90) rotate(20) scale(0.55)"/><use href="#bean" transform="translate(210 330) rotate(-35) scale(0.5)"/><use href="#bean" transform="translate(120 610) rotate(50) scale(0.6)"/><use href="#bean" transform="translate(60 860) rotate(-10) scale(0.5)"/><use href="#bean" transform="translate(900 140) rotate(30) scale(0.55)"/><use href="#bean" transform="translate(820 420) rotate(-50) scale(0.6)"/><use href="#bean" transform="translate(930 700) rotate(15) scale(0.5)"/><use href="#bean" transform="translate(860 930) rotate(-30) scale(0.55)"/><use href="#bean" transform="translate(520 60) rotate(40) scale(0.45)"/></g>
+      <g class="bl l-mid" style="opacity:.55;filter:blur(1px)"><use href="#bean" transform="translate(150 200) rotate(25) scale(0.9)"/><use href="#bean" transform="translate(880 260) rotate(-30) scale(0.95)"/><use href="#bean" transform="translate(70 520) rotate(-60) scale(0.85)"/><use href="#bean" transform="translate(940 560) rotate(45) scale(0.9)"/><use href="#bean" transform="translate(190 820) rotate(10) scale(0.95)"/><use href="#bean" transform="translate(800 880) rotate(-20) scale(0.9)"/><use href="#bean" transform="translate(500 950) rotate(35) scale(0.8)"/></g>
+      <g class="bl l-near" style="opacity:.85"><use href="#bean" transform="translate(60 330) rotate(35) scale(1.5)"/><use href="#bean" transform="translate(950 430) rotate(-25) scale(1.45)"/><use href="#bean" transform="translate(110 730) rotate(-50) scale(1.35)"/><use href="#bean" transform="translate(900 820) rotate(20) scale(1.5)"/><use href="#bean" transform="translate(980 90) rotate(60) scale(1.3)"/></g>
+      <g class="steam"><path d="M 160 1040 C 120 900, 210 800, 150 680 S 130 460, 190 330 S 150 120, 170 -40" style="animation-duration:8.5s;animation-delay:0s"/><path d="M 330 1040 C 290 930, 380 820, 320 700 S 300 480, 360 350 S 320 140, 340 -40" style="animation-duration:11s;animation-delay:-2.5s"/><path d="M 500 1040 C 460 910, 560 810, 500 690 S 470 470, 530 340 S 490 130, 510 -40" style="animation-duration:9.5s;animation-delay:-5s"/><path d="M 670 1040 C 630 920, 720 810, 660 690 S 640 470, 700 340 S 660 130, 680 -40" style="animation-duration:12s;animation-delay:-1s"/><path d="M 840 1040 C 800 930, 890 820, 830 700 S 810 480, 870 350 S 830 140, 850 -40" style="animation-duration:10s;animation-delay:-7s"/></g>
+    </svg>
+  </div>
+  <div class="story-in">
+    <header class="story-head">
+      <p class="story-eyebrow">Путь одной чашки</p>
+      <h2 class="story-h">От зерна до чашки</h2>
+      <p class="scrub" id="scrub">Мы выбираем отборные зёрна, обжариваем их свежо и готовим каждую чашку с душой. Так в вашем напитке остаются чистый вкус и тепло.</p>
+    </header>
+    <div class="stack"><article class="scard" style="--i:0;--tint:rgba(112,152,84,.30)"><div class="snum" aria-hidden="true">01</div><div><div class="stag"><i data-lucide="sprout" class="w-4 h-4"></i> Этап 1 · зелёное зерно</div><h3 class="stitle">Отборные зёрна</h3><p class="stext">Всё начинается с зелёного зерна. Мы выбираем отборные зёрна премиального качества, чтобы вкус в чашке был чистым и насыщенным.</p></div></article><article class="scard" style="--i:1;--tint:rgba(196,128,62,.28)"><div class="snum" aria-hidden="true">02</div><div><div class="stag"><i data-lucide="flame" class="w-4 h-4"></i> Этап 2 · огонь</div><h3 class="stitle">Свежая обжарка</h3><p class="stext">Огонь раскрывает характер зерна: оно темнеет, появляются аромат и сладость. Поэтому мы делаем ставку на свежую обжарку.</p></div></article><article class="scard" style="--i:2;--tint:rgba(128,76,44,.32)"><div class="snum" aria-hidden="true">03</div><div><div class="stag"><i data-lucide="leaf" class="w-4 h-4"></i> Этап 3 · чистый вкус</div><h3 class="stitle">Натуральный состав</h3><p class="stext">Кофе, молоко, чай, ягоды и фрукты: в напитках мы делаем ставку на натуральные ингредиенты.</p></div></article><article class="scard" style="--i:3;--tint:rgba(216,154,91,.26)"><div class="snum" aria-hidden="true">04</div><div><div class="stag"><i data-lucide="heart" class="w-4 h-4"></i> Этап 4 · ваша чашка</div><h3 class="stitle">Сделано с душой</h3><p class="stext">И последний ингредиент — внимание бариста. Каждую чашку готовим так, будто делаем её для друга.</p></div></article></div>
   </div>
 </section>
 
@@ -276,6 +404,18 @@ header nav.glass.scrolled{background:rgba(13,9,7,.8)}            /* при пр�
         <p id="fErr" class="text-sm text-center min-h-5" style="color:#e58c7a"></p>
       </form>
       <div class="ph min-h-[240px]" data-photo="book"><i data-lucide="calendar-check"></i></div>
+    </div>
+  </div>
+</section>
+<section id="finale" class="finale" aria-label="Заглянуть в гости">
+  <div class="finale-in">
+    <svg class="steam steam-f" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><g class="steam"><path d="M 160 1040 C 120 900, 210 800, 150 680 S 130 460, 190 330 S 150 120, 170 -40" style="animation-duration:8.5s;animation-delay:0s"/><path d="M 330 1040 C 290 930, 380 820, 320 700 S 300 480, 360 350 S 320 140, 340 -40" style="animation-duration:11s;animation-delay:-2.5s"/><path d="M 500 1040 C 460 910, 560 810, 500 690 S 470 470, 530 340 S 490 130, 510 -40" style="animation-duration:9.5s;animation-delay:-5s"/><path d="M 670 1040 C 630 920, 720 810, 660 690 S 640 470, 700 340 S 660 130, 680 -40" style="animation-duration:12s;animation-delay:-1s"/><path d="M 840 1040 C 800 930, 890 820, 830 700 S 810 480, 870 350 S 830 140, 850 -40" style="animation-duration:10s;animation-delay:-7s"/></g></svg>
+    <div>
+      <h2 class="finale-t nosplit">Заглянуть<br>в гости</h2>
+      <div class="finale-cta">
+        <a href="#book" class="btn btn-amber"><i data-lucide="calendar-check" class="w-4 h-4"></i> Забронировать столик</a>
+        <a href="https://2gis.kz/almaty/geo/70000001110902166" target="_blank" rel="noopener" class="btn btn-ghost"><span class="gis">2ГИС</span> Построить маршрут</a>
+      </div>
     </div>
   </div>
 </section>
@@ -640,7 +780,7 @@ try{lucide.createIcons()}catch(e){}
    ===================================================================== */
 (function(){
   /* --- 1. REVEAL: какие элементы «выплывают» при прокрутке --- */
-  const SEL='main h2, main h2 + p, main .card:not(.mc), #gal > *, .mcat > div:first-child, .mcat > p, #promo > *, #again > *, #wait';
+  const SEL='main h2 + p, main .card:not(.mc), #gal > *, .mcat > div:first-child, .mcat > p, #promo > *, #again > *, #wait';
   const io=new IntersectionObserver(es=>es.forEach(e=>{
     if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}     // вошёл в экран → запускаем анимацию
   }),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
@@ -684,6 +824,248 @@ try{lucide.createIcons()}catch(e){}
       c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');
     },{passive:true});
   }
+})();
+</script>
+<script id="awwwards-layer-js">
+/* =====================================================================
+   AWWWARDS-LAYER JS. Все «ручки» настройки находятся в объекте CFG ниже.
+   Скрипт ничего не знает о ценах, фото и заказах: он только двигает оформление.
+   ===================================================================== */
+(function(){
+  /* ============== НАСТРОЙКИ (меняйте числа здесь) ============== */
+  const CFG={
+    smooth:{enabled:true, mode:'bezier', curve:[.16,1,.3,1], duration:1.15, anchorDuration:1.5, ease:.085, wheel:1},
+      // mode:'bezier' — скролл едет по кривой cubic-bezier(.16,1,.3,1) за duration секунд (колесо) или anchorDuration (переходы по ссылкам).
+      //   Чем больше duration, тем «тягучее». curve — четыре числа кривой; другие любимые: [.22,1,.36,1] (мягче), [.7,0,.2,1] (кинематографично).
+      // mode:'lerp' — альтернатива: каждый кадр догоняем цель на долю ease (0.04 = вязко, 0.085 = масляно, 0.2 = резко).
+      // wheel — множитель шага колеса мыши (1 = как обычно, 1.5 = быстрее листаем)
+    reveal:{mode:'words', h1Mode:'chars', wordDelay:.05, charDelay:.022, threshold:.25},
+      // mode — как проявляются заголовки H2: 'words' (по словам) или 'chars' (по буквам); h1Mode — то же для главного заголовка
+      // wordDelay / charDelay — пауза между словами / буквами (сек); threshold — какая часть заголовка должна войти в экран, чтобы показ начался
+    tilt:{max:9, perspective:1100, k:110, c:15, depth:46, titleShift:10},
+      // max — наклон главного фото в градусах; k — жёсткость пружины, c — затухание (меньше c = пружинит дольше)
+    magnet:{k:170, c:14,
+      buttons:{sel:'.btn,.madd,#cartBtn', strength:.33, max:14},          // кнопки: сильно «липнут» к курсору
+      cards:{sel:'.mc', strength:.05, max:7, lift:true},                  // карточки меню: еле заметно тянутся, тень становится глубже
+      photos:{sel:'#gal > *', strength:.07, max:9, lift:true}},           // фото в галерее: так же
+      // k — жёсткость пружины (больше = резче), c — затухание (меньше = дольше качается). strength — какую долю смещения курсора «перенимает»
+      // элемент; max — предел смещения (px); lift — менять ли глубину тени. Цель магнита задаётся в sel (любой CSS-селектор)
+    fly:{enabled:true, duration:.8, pop:true},
+      // fly — капля «улетает» в корзину при нажатии «Добавить» (duration — сек); pop — цена «встряхивается», когда меняете объём
+    stack:{scaleDrop:.055, dim:.38, fade:.32, lift:-12},
+      // как сильно карточка, которую накрыла следующая, уменьшается (scaleDrop) / темнеет (dim) / становится прозрачнее (fade) / приподнимается (lift, px)
+    steam:{rise:170},
+      // на сколько единиц (в системе SVG) линии пара «вытягиваются» вверх за всю прокрутку истории; 0 — только собственная анимация
+    roast:{from:[104,142,76], mid:[150,98,52], to:[58,32,20]},
+      // цвет зёрен по ходу истории: зелёный → обжаренный → тёмный шоколад (RGB)
+    dark:{base:[13,9,7], end:[4,2,1], surfBase:[23,16,13], surfEnd:[9,5,3], start:.9, length:1},
+      // фон страницы сгущается от base к end; start/length — когда (в высотах экрана от начала финала) это происходит
+    finale:{minScale:.28, ctaFrom:.7}
+      // minScale — стартовый размер надписи «Заглянуть в гости»; ctaFrom — на какой доле прокрутки появляются кнопки
+  };
+
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const root=document.documentElement;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const mix=(a,b,t)=>a+(b-a)*t;
+  const rgb=(a,b,t)=>`rgb(${mix(a[0],b[0],t)|0},${mix(a[1],b[1],t)|0},${mix(a[2],b[2],t)|0})`;
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const mouse=matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  /* ============== 0. ПРУЖИНА — общая физика для наклона и магнита ============== */
+  // Пружина тянет значение p к цели t: ускорение = -k*(p-t) - c*скорость. Это даёт «живое» притягивание с лёгким перелётом
+  const active=new Set();let loopId=0,lastT=0;
+  class Spring{
+    constructor(k,c,apply){this.k=k;this.c=c;this.apply=apply;this.p=[0,0];this.v=[0,0];this.t=[0,0]}
+    to(x,y){this.t=[x,y];active.add(this);if(!loopId){lastT=performance.now();loopId=requestAnimationFrame(tick)}}
+    step(dt){let rest=true;
+      for(let i=0;i<2;i++){this.v[i]+=(-this.k*(this.p[i]-this.t[i])-this.c*this.v[i])*dt;this.p[i]+=this.v[i]*dt;
+        if(Math.abs(this.v[i])>.02||Math.abs(this.p[i]-this.t[i])>.02)rest=false}
+      this.apply(this.p[0],this.p[1]);return rest}
+  }
+  function tick(t){const dt=Math.min((t-lastT)/1000,1/30);lastT=t;
+    active.forEach(s=>{if(s.step(dt)){s.p=s.t.slice();s.apply(s.p[0],s.p[1]);active.delete(s)}});
+    loopId=active.size?requestAnimationFrame(tick):0}
+
+  /* ============== 1. МАСЛЯНЫЙ СКРОЛЛ (инерция, только мышь/трекпад) ============== */
+  // Колесо мыши меняет не позицию, а ЦЕЛЬ; страница каждый кадр приближается к цели на долю CFG.smooth.ease.
+  // Для телефонов ничего не включаем: родной скролл пальцем уже инерционный.
+  if(CFG.smooth.enabled&&mouse&&!reduce){
+    root.classList.add('lerp');
+    let cur=scrollY,tgt=scrollY,from=scrollY,lastSet=scrollY,run=false,prev=0,t0=0,dur=CFG.smooth.duration;
+    const maxY=()=>root.scrollHeight-innerHeight;
+    const overlay=()=>{const v=s=>{const e=$(s);return e&&!e.classList.contains('hidden')};return v('#shade')||v('#rcpt')||v('#fb')||v('#lb')};   // открыта корзина/чек/окно: скролл не перехватываем
+    const inner=(el,dy)=>{for(;el&&el!==document.body;el=el.parentElement){          // вложенные прокручиваемые блоки скроллим как обычно
+      const s=getComputedStyle(el);if(/(auto|scroll)/.test(s.overflowY)&&el.scrollHeight>el.clientHeight+1){
+        if(dy<0?el.scrollTop>0:el.scrollTop+el.clientHeight<el.scrollHeight-1)return true}}return false};
+    // Кривая cubic-bezier(x1,y1,x2,y2) как в CSS: по прогрессу времени x (0…1) отдаёт прогресс пути y (0…1)
+    const bezier=(x1,y1,x2,y2)=>{
+      const cx=3*x1,bx=3*(x2-x1)-cx,ax=1-cx-bx,cy=3*y1,by=3*(y2-y1)-cy,ay=1-cy-by;
+      const X=t=>((ax*t+bx)*t+cx)*t,Y=t=>((ay*t+by)*t+cy)*t;
+      return x=>{if(x<=0)return 0;if(x>=1)return 1;let lo=0,hi=1,t=x;for(let i=0;i<20;i++){t=(lo+hi)/2;X(t)<x?lo=t:hi=t}return Y(t)};
+    };
+    const ease=bezier(...CFG.smooth.curve);
+    function loop(t){
+      if(CFG.smooth.mode==='bezier'){
+        const p=clamp((t-t0)/(dur*1000),0,1);
+        cur=from+(tgt-from)*ease(p);                                  // путь от точки старта к цели по кривой
+        if(p>=1){cur=tgt;run=false}
+      }else{
+        const dt=Math.min((t-prev)/1000,.12);prev=t;
+        cur+=(tgt-cur)*(1-Math.pow(1-CFG.smooth.ease,dt*60));         // «догоняем цель»: независимо от частоты экрана (60/120 Гц)
+        if(Math.abs(tgt-cur)<.4){cur=tgt;run=false}
+      }
+      lastSet=cur;scrollTo(0,cur);
+      if(run)requestAnimationFrame(loop);
+    }
+    // новая цель: стартуем от текущей позиции, поэтому серия прокруток колесом складывается без рывков
+    const go=(y,d)=>{from=cur;tgt=clamp(y,0,maxY());dur=d;t0=performance.now();prev=t0;if(!run){run=true;requestAnimationFrame(loop)}};
+    addEventListener('wheel',e=>{
+      if(e.ctrlKey||overlay()||Math.abs(e.deltaX)>Math.abs(e.deltaY)||inner(e.target,e.deltaY))return;
+      e.preventDefault();
+      const dy=e.deltaY*(e.deltaMode===1?32:e.deltaMode===2?innerHeight:1)*CFG.smooth.wheel;
+      go(tgt+dy,CFG.smooth.duration);
+    },{passive:false});
+    addEventListener('scroll',()=>{if(run)return;if(Math.abs(scrollY-lastSet)>1.5){cur=tgt=from=scrollY;lastSet=scrollY}},{passive:true});   // клавиши, ползунок: просто синхронизируемся
+    document.addEventListener('click',e=>{                                                                     // плавные якоря (#menu, #book …)
+      const a=e.target.closest('a[href^="#"]');if(!a||a.hasAttribute('data-book'))return;
+      const id=a.getAttribute('href');if(id.length<2)return;const el=$(id);if(!el)return;
+      e.preventDefault();
+      const cs=getComputedStyle(el),pad=parseFloat(getComputedStyle(root).scrollPaddingTop)||0,mar=parseFloat(cs.scrollMarginTop)||0;
+      go(el.getBoundingClientRect().top+scrollY-pad-mar,CFG.smooth.anchorDuration);history.replaceState(null,'',id);
+    });
+  }
+
+  /* ============== 2. ТЕКСТ ПО СЛОВАМ ============== */
+  if(!reduce){
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:CFG.reveal.threshold,rootMargin:'0px 0px -8% 0px'});
+    $$('main h1, main h2:not(.nosplit)').forEach(h=>{
+      const text=h.textContent.trim().replace(/\s+/g,' '),chars=(h.tagName==='H1'?CFG.reveal.h1Mode:CFG.reveal.mode)==='chars';
+      h.setAttribute('aria-label',text);h.dataset.split='1';h.textContent='';
+      h.style.setProperty('--ws',(chars?CFG.reveal.charDelay:CFG.reveal.wordDelay)+'s');     // шаг каскада: между словами или между буквами
+      let n=0;
+      text.split(' ').forEach((w,wi,arr)=>{
+        const o=document.createElement('span');o.className='wo';o.setAttribute('aria-hidden','true');   // «маска»: слово выезжает из-за её нижней кромки
+        (chars?[...w]:[w]).forEach(part=>{const s=document.createElement('span');s.className='wi';s.style.setProperty('--i',n++);s.textContent=part;o.appendChild(s)});
+        h.appendChild(o);if(wi<arr.length-1)h.appendChild(document.createTextNode(' '));
+      });
+      io.observe(h);
+    });
+  }
+  // абзац истории: слова загораются по мере прокрутки
+  const scrub=$('#scrub');let sw=[];
+  if(scrub&&!reduce){const words=scrub.textContent.trim().split(/\s+/);scrub.textContent='';
+    sw=words.map((w,i)=>{const s=document.createElement('span');s.className='sw';s.textContent=w;scrub.appendChild(s);if(i<words.length-1)scrub.appendChild(document.createTextNode(' '));return s})}
+
+  /* ============== 3. HERO: 3D-наклон за мышью + параллакс заголовка ============== */
+  const hero=$('main>section:first-child'),tiltEl=hero&&hero.querySelectorAll('.rise')[1],h1=hero&&hero.querySelector('h1');
+  if(mouse&&!reduce&&hero&&tiltEl){
+    tiltEl.classList.add('tilt');tiltEl.style.setProperty('--depth',CFG.tilt.depth+'px');
+    const T=CFG.tilt;
+    const sp=new Spring(T.k,T.c,(rx,ry)=>{tiltEl.style.transform=`perspective(${T.perspective}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      if(h1)h1.style.translate=`${-ry/T.max*T.titleShift}px ${rx/T.max*T.titleShift*.6}px`});
+    hero.addEventListener('pointermove',e=>{const r=hero.getBoundingClientRect();
+      const nx=(e.clientX-r.left)/r.width-.5,ny=(e.clientY-r.top)/r.height-.5;
+      sp.to(-ny*2*T.max,nx*2*T.max)});                                          // курсор слева → фото поворачивается влево и т.д.
+    hero.addEventListener('pointerleave',()=>sp.to(0,0));                       // уходим — пружина мягко возвращает в центр
+  }
+
+  /* ============== 4. ИНТЕРАКТИВНОЕ МЕНЮ ============== */
+  // 4a. МАГНИТ: элемент мягко притягивается к курсору, а его тень углубляется. Цели и силы задаются в CFG.magnet.
+  //     У каждого элемента две пружины: pos (сдвиг x/y) и lift (глубина тени 0…1). Обе считает общий Spring из блока 0
+  if(mouse&&!reduce){
+    const M=CFG.magnet,groups=[M.buttons,M.cards,M.photos],springs=new WeakMap();
+    const get=(el,g)=>{let s=springs.get(el);if(!s){
+      s={pos:new Spring(M.k,M.c,(x,y)=>{el.style.translate=`${x}px ${y}px`;if(g.lift){el.style.setProperty('--sx',(-x)+'px');el.style.setProperty('--sy',(-y)+'px')}}),
+         lift:g.lift?new Spring(120,16,v=>el.style.setProperty('--lift',v.toFixed(3))):null};springs.set(el,s)}return s};
+    document.addEventListener('pointermove',e=>{
+      groups.forEach(g=>{const el=e.target.closest&&e.target.closest(g.sel);if(!el)return;
+        const r=el.getBoundingClientRect(),s=get(el,g);
+        s.pos.to(clamp((e.clientX-(r.left+r.width/2))*g.strength,-g.max,g.max),clamp((e.clientY-(r.top+r.height/2))*g.strength,-g.max,g.max));   // цель = смещение курсора от центра × сила
+        if(s.lift)s.lift.to(1,0);                                                                                                               // тень уходит на «глубину»
+      });
+    },{passive:true});
+    document.addEventListener('pointerout',e=>{                                    // курсор ушёл: пружины мягко возвращают всё на место
+      groups.forEach(g=>{const el=e.target.closest&&e.target.closest(g.sel);
+        if(el&&!el.contains(e.relatedTarget)){const s=get(el,g);s.pos.to(0,0);if(s.lift)s.lift.to(0,0)}});
+    });
+  }
+  // 4b. ДИНАМИЧЕСКИЙ ФОКУС: наведённая карточка получает .is-hover, а сетка — .focus; остальные карточки уходят в расфокус (см. CSS: --focus-*).
+  //     Работает и с клавиатуры (Tab на кнопку внутри карточки)
+  const grid=$('#menuGrid');
+  if(grid){
+    const clear=()=>{grid.classList.remove('focus');grid.querySelectorAll('.is-hover').forEach(x=>x.classList.remove('is-hover'))};
+    const on=c=>{if(c.classList.contains('is-hover'))return;grid.querySelectorAll('.is-hover').forEach(x=>x.classList.remove('is-hover'));c.classList.add('is-hover');grid.classList.add('focus')};
+    if(mouse){grid.addEventListener('pointerover',e=>{const c=e.target.closest('.mc');c?on(c):clear()});grid.addEventListener('pointerleave',clear)}
+    grid.addEventListener('focusin',e=>{const c=e.target.closest('.mc');if(c)on(c)});
+    grid.addEventListener('focusout',clear);
+  }
+  // 4c. МИКРО-МАГИЯ (чисто визуальная: цены и корзину не меняет)
+  if(!reduce){
+    const pulse=el=>el.animate([{scale:1},{scale:1.2},{scale:1}],{duration:520,easing:'cubic-bezier(.34,1.56,.64,1)'});          // «пружинка» с перелётом
+    document.addEventListener('click',e=>{
+      const add=e.target.closest('[data-add]');
+      if(CFG.fly.enabled&&add){                                                                 // «Добавить»: капля летит по дуге к корзине
+        const cart=$('#cartBtn');if(cart){
+          const a=add.getBoundingClientRect(),c=cart.getBoundingClientRect(),sx=a.left+a.width/2-7,sy=a.top+a.height/2-7,ex=c.left+c.width/2-7,ey=c.top+c.height/2-7;
+          const dot=document.createElement('div');dot.className='fly';document.body.appendChild(dot);
+          dot.animate([{transform:`translate(${sx}px,${sy}px) scale(1)`,opacity:1},
+                       {transform:`translate(${(sx+ex)/2}px,${Math.min(sy,ey)-90}px) scale(1.2)`,opacity:1,offset:.45},
+                       {transform:`translate(${ex}px,${ey}px) scale(.35)`,opacity:.9}],
+                      {duration:CFG.fly.duration*1000,easing:'cubic-bezier(.16,1,.3,1)'}).onfinish=()=>{dot.remove();pulse(cart)};
+        }
+      }
+      const sz=e.target.closest('[data-sz]');
+      if(CFG.fly.pop&&sz){const mp=sz.closest('.mc')&&sz.closest('.mc').querySelector('.mp');                          // смена объёма: цена «оседает» с пружинкой
+        if(mp)mp.animate([{transform:'scale(1.14)',opacity:.55},{transform:'scale(1)',opacity:1}],{duration:520,easing:'cubic-bezier(.34,1.56,.64,1)'})}
+    });
+  }
+
+  /* ============== 5. СЦЕНАРИЙ ПРОКРУТКИ: история, зёрна, пар, стопка карточек, финал ============== */
+  const story=$('#story'),cards=$$('.scard'),beans=$$('.bl'),finale=$('#finale'),ft=$('.finale-t'),fcta=$('.finale-cta'),bar=$('#sprog')||(()=>{const d=document.createElement('div');d.id='sprog';d.setAttribute('aria-hidden','true');document.body.appendChild(d);return d})();
+  const steamG=story&&story.querySelector('g.steam'),par=[.35,.7,1.15];                                                         // глубина слоёв зёрен: дальние движутся меньше
+  function render(){
+    const y=scrollY,vh=innerHeight,max=root.scrollHeight-vh;
+    root.style.setProperty('--sp',max>0?(y/max).toFixed(4):0);                       // тонкая полоса прогресса сверху
+
+    if(story){
+      const r=story.getBoundingClientRect(),p=clamp(-r.top/(r.height-vh),0,1);
+      // цвет зёрен: зелёные → обжаренные → шоколад
+      const R=CFG.roast,c=p<.5?rgb(R.from,R.mid,p*2):rgb(R.mid,R.to,(p-.5)*2),d=p<.5?rgb(R.from.map(v=>v*.65),R.mid.map(v=>v*.65),p*2):rgb(R.mid.map(v=>v*.65),R.to.map(v=>v*.65),(p-.5)*2);
+      story.style.setProperty('--bean',c);story.style.setProperty('--bean-d',d);
+      beans.forEach((g,i)=>g.style.transform=`translate3d(0,${(-p*vh*par[i]*.9).toFixed(1)}px,0)`);          // параллакс: зёрна плывут вверх с разной скоростью
+      if(steamG&&!reduce)steamG.style.transform=`translate3d(0,${(-p*CFG.steam.rise).toFixed(1)}px,0)`;        // пар поднимается вместе со скроллом
+      if(!reduce)cards.forEach((card,i)=>{                                                                   // «наслаивание»: накрытая карточка уменьшается и темнеет
+        const next=cards[i+1];if(!next){card.style.setProperty('--ss',1);return}
+        const top=parseFloat(getComputedStyle(card).top)||0,h=card.offsetHeight,nt=next.getBoundingClientRect().top;
+        const k=clamp((h+top-nt)/(h-20),0,1);
+        card.style.setProperty('--ss',(1-CFG.stack.scaleDrop*k).toFixed(4));
+        card.style.setProperty('--sb',(1-CFG.stack.dim*k).toFixed(3));
+        card.style.setProperty('--sy',(CFG.stack.lift*k).toFixed(1)+'px');
+        card.style.setProperty('--so',(1-CFG.stack.fade*k).toFixed(3));
+      });
+    }
+    if(sw.length){                                                                                            // абзац «зажигается» слово за словом
+      const r=scrub.getBoundingClientRect(),pr=clamp((vh*.85-r.top)/(vh*.55+r.height),0,1),n=sw.length;
+      sw.forEach((s,i)=>s.style.opacity=(.16+.84*clamp(pr*(n+4)-i,0,1)).toFixed(2));
+    }
+    if(finale){
+      const r=finale.getBoundingClientRect(),H=r.height-vh,top=r.top;
+      // 1) фон сгущается до бархатного кофейно-чёрного
+      const D=CFG.dark,dp=clamp((vh*D.start-top)/(vh*D.length),0,1);
+      root.style.setProperty('--bg',rgb(D.base,D.end,dp));root.style.setProperty('--surface',rgb(D.surfBase,D.surfEnd,dp));
+      // 2) надпись растёт на весь экран
+      const fp=clamp(-top/H,0,1),g=clamp(fp/CFG.finale.ctaFrom,0,1),e=1-Math.pow(1-g,3);   // ease-out
+      const vis=top<vh*.6;
+      ft.style.setProperty('--fs',(vis?mix(CFG.finale.minScale,1,e):CFG.finale.minScale).toFixed(3));
+      ft.style.setProperty('--fo',vis?clamp(g*1.8,0,1).toFixed(2):0);
+      const c=clamp((fp-CFG.finale.ctaFrom)/(1-CFG.finale.ctaFrom),0,1);
+      fcta.style.setProperty('--fc',c.toFixed(3));fcta.style.pointerEvents=c>.5?'auto':'none';
+    }
+  }
+  let queued=false;
+  const queue=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;render()})};
+  addEventListener('scroll',queue,{passive:true});addEventListener('resize',queue);render();
 })();
 </script>
 </body>
